@@ -1,0 +1,66 @@
+services:
+  web:
+    image: nginx:alpine
+    container_name: clinic_web
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+    networks:
+      - clinic_network
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: clinic_app
+    restart: unless-stopped
+    volumes:
+      - ./:/var/www/html
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: clinic_db
+      DB_USER: clinic_user
+      DB_PASS: clinic_pass
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - clinic_network
+
+  db:
+    image: mysql:8.0
+    container_name: clinic_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: clinic_db
+      MYSQL_USER: clinic_user
+      MYSQL_PASSWORD: clinic_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - clinic_mysql_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "clinic_user", "-pclinic_pass"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - clinic_network
+
+networks:
+  clinic_network:
+    driver: bridge
+
+volumes:
+  clinic_mysql_data:
+    driver: local
