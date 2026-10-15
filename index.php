@@ -35,21 +35,24 @@ $activePage = 'today';
 require_once __DIR__ . '/header.php';
 ?>
 
-<div class="card">
-  <div class="card-header">
+<div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 mb-6">
+  <!-- Card Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 mb-6 border-b border-slate-100">
     <div>
-      <h2 class="card-title">
-        <span>📅</span> รายการนัดหมายประจำวัน
-        <span class="badge badge-hn" style="font-size: 0.85rem;"><?= count($appointments) ?> รายการ</span>
+      <h2 class="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-2">
+        <span>📅</span> <span>รายการนัดหมายประจำวัน</span>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-sky-50 text-sky-700 border border-sky-200">
+          <?= count($appointments) ?> รายการ
+        </span>
       </h2>
-      <div class="card-subtitle">
+      <p class="text-xs sm:text-sm text-slate-400 mt-1">
         แสดงรายการนัดหมายเรียงตามเวลา สามารถกรองตามแพทย์และปรับเปลี่ยนสถานะได้
-      </div>
+      </p>
     </div>
 
-    <!-- Filter Bar -->
-    <form method="GET" action="index.php" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-      <select name="doctor_id" class="form-control" style="width: auto;" onchange="this.form.submit()">
+    <!-- Filter Form -->
+    <form method="GET" action="index.php" class="flex flex-wrap items-center gap-2.5">
+      <select name="doctor_id" class="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 bg-white" onchange="this.form.submit()">
         <option value="">-- แพทย์ทุกคน (All Doctors) --</option>
         <?php foreach ($doctors as $doc): ?>
           <option value="<?= $doc['id'] ?>" <?= $selectedDoctor === (int)$doc['id'] ? 'selected' : '' ?>>
@@ -58,75 +61,94 @@ require_once __DIR__ . '/header.php';
         <?php endforeach; ?>
       </select>
 
-      <input type="date" name="date" class="form-control" style="width: auto;" value="<?= htmlspecialchars($selectedDate) ?>" onchange="this.form.submit()">
+      <input type="date" name="date" class="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 bg-white" value="<?= htmlspecialchars($selectedDate) ?>" onchange="this.form.submit()">
 
-      <a href="booking.php" class="btn btn-gold">
-        <span>➕</span> สร้างนัดหมายใหม่
+      <a href="booking.php" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 shadow-sm transition-all">
+        <span>➕</span> <span>สร้างนัดหมายใหม่</span>
       </a>
     </form>
   </div>
 
+  <!-- Notifications -->
   <?php if ($message): ?>
-    <div class="alert alert-success">✅ <?= htmlspecialchars($message) ?></div>
+    <div class="mb-5 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center gap-2">
+      <span>✅</span> <span><?= htmlspecialchars($message) ?></span>
+    </div>
   <?php endif; ?>
   <?php if ($error): ?>
-    <div class="alert alert-danger">⚠️ <?= htmlspecialchars($error) ?></div>
+    <div class="mb-5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center gap-2">
+      <span>⚠️</span> <span><?= htmlspecialchars($error) ?></span>
+    </div>
   <?php endif; ?>
 
-  <!-- Table -->
-  <div class="table-responsive">
-    <table class="table">
-      <thead>
+  <!-- Appointments Table -->
+  <div class="overflow-x-auto rounded-xl border border-slate-100">
+    <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
+      <thead class="bg-slate-50 text-slate-500 uppercase text-xs font-semibold tracking-wider">
         <tr>
-          <th style="width: 140px;">เวลานัด</th>
-          <th style="width: 110px;">HN</th>
-          <th>ชื่อคนไข้</th>
-          <th>เบอร์โทร</th>
-          <th>แพทย์ผู้ตรวจ</th>
-          <th>หมายเหตุ/อาการ</th>
-          <th style="width: 120px;">สถานะ</th>
-          <th style="width: 150px;">เปลี่ยนสถานะ</th>
+          <th class="px-4 py-3.5 w-32">เวลานัด</th>
+          <th class="px-4 py-3.5 w-28">HN</th>
+          <th class="px-4 py-3.5">ชื่อคนไข้</th>
+          <th class="px-4 py-3.5">เบอร์โทร</th>
+          <th class="px-4 py-3.5">แพทย์ผู้ตรวจ</th>
+          <th class="px-4 py-3.5">หมายเหตุ/อาการ</th>
+          <th class="px-4 py-3.5 w-28">สถานะ</th>
+          <th class="px-4 py-3.5 w-36">เปลี่ยนสถานะ</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody class="divide-y divide-slate-100 bg-white">
         <?php if (empty($appointments)): ?>
           <tr>
-            <td colspan="8" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
-              📋 ไม่มีรายการนัดหมายสำหรับเงื่อนไขที่เลือก
+            <td colspan="8" class="text-center py-12 text-slate-400">
+              <div class="text-3xl mb-1">📋</div>
+              <div>ไม่มีรายการนัดหมายสำหรับเงื่อนไขที่เลือก</div>
             </td>
           </tr>
         <?php else: ?>
           <?php foreach ($appointments as $item): 
             $timeRange = substr($item['start_time'], 0, 5) . ' - ' . substr($item['end_time'], 0, 5);
-            $badgeClass = 'badge-pending';
+            $badgeColor = 'bg-amber-50 text-amber-800 border-amber-200';
             $badgeText = 'รอรับบริการ';
             if ($item['status'] === 'arrived') {
-                $badgeClass = 'badge-arrived';
+                $badgeColor = 'bg-emerald-50 text-emerald-800 border-emerald-200';
                 $badgeText = 'มาถึงแล้ว';
             } elseif ($item['status'] === 'cancelled') {
-                $badgeClass = 'badge-cancelled';
+                $badgeColor = 'bg-rose-50 text-rose-800 border-rose-200';
                 $badgeText = 'ยกเลิกแล้ว';
             }
           ?>
-            <tr>
-              <td><strong><?= $timeRange ?></strong> น.</td>
-              <td><span class="badge badge-hn"><?= htmlspecialchars($item['patient_hn']) ?></span></td>
-              <td><strong><?= htmlspecialchars($item['patient_name']) ?></strong></td>
-              <td><code><?= htmlspecialchars($item['patient_phone']) ?></code></td>
-              <td>
-                <div><?= htmlspecialchars($item['doctor_name']) ?></div>
-                <div style="font-size: 0.75rem; color: var(--text-muted);"><?= htmlspecialchars($item['doctor_specialty']) ?></div>
+            <tr class="hover:bg-slate-50/80 transition-colors">
+              <td class="px-4 py-3.5 font-bold text-slate-800 whitespace-nowrap">
+                <?= $timeRange ?> น.
               </td>
-              <td style="color: var(--text-secondary);"><?= htmlspecialchars($item['note'] ?: '-') ?></td>
-              <td>
-                <span class="badge <?= $badgeClass ?>"><?= $badgeText ?></span>
+              <td class="px-4 py-3.5 whitespace-nowrap">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-sky-50 text-sky-700 border border-sky-200">
+                  <?= htmlspecialchars($item['patient_hn']) ?>
+                </span>
               </td>
-              <td>
-                <!-- Simple Form for changing status -->
-                <form method="POST" action="index.php" style="margin: 0;">
+              <td class="px-4 py-3.5 font-semibold text-slate-800">
+                <?= htmlspecialchars($item['patient_name']) ?>
+              </td>
+              <td class="px-4 py-3.5 text-slate-600 font-mono text-xs">
+                <?= htmlspecialchars($item['patient_phone']) ?>
+              </td>
+              <td class="px-4 py-3.5">
+                <div class="font-medium text-slate-800"><?= htmlspecialchars($item['doctor_name']) ?></div>
+                <div class="text-xs text-slate-400"><?= htmlspecialchars($item['doctor_specialty']) ?></div>
+              </td>
+              <td class="px-4 py-3.5 text-slate-600 max-w-xs truncate">
+                <?= htmlspecialchars($item['note'] ?: '-') ?>
+              </td>
+              <td class="px-4 py-3.5 whitespace-nowrap">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border <?= $badgeColor ?>">
+                  <?= $badgeText ?>
+                </span>
+              </td>
+              <td class="px-4 py-3.5 whitespace-nowrap">
+                <form method="POST" action="index.php" class="m-0">
                   <input type="hidden" name="action" value="update_status">
                   <input type="hidden" name="appointment_id" value="<?= $item['id'] ?>">
-                  <select name="status" class="form-control" style="padding: 4px 8px; font-size: 0.82rem;" onchange="this.form.submit()">
+                  <select name="status" class="px-2 py-1 text-xs border border-slate-300 rounded-md bg-white font-medium focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer" onchange="this.form.submit()">
                     <option value="pending" <?= $item['status'] === 'pending' ? 'selected' : '' ?>>⏳ รอ</option>
                     <option value="arrived" <?= $item['status'] === 'arrived' ? 'selected' : '' ?>>✅ มาแล้ว</option>
                     <option value="cancelled" <?= $item['status'] === 'cancelled' ? 'selected' : '' ?>>❌ ยกเลิก</option>

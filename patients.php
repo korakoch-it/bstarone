@@ -51,111 +51,154 @@ $activePage = 'patients';
 require_once __DIR__ . '/header.php';
 ?>
 
-<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px; align-items: start;">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
 
-  <!-- Form Column (ซ้าย): ฟอร์มเพิ่ม หรือ แก้ไข -->
-  <div class="card">
-    <h3 class="card-title" style="font-size: 1.15rem; margin-bottom: 1rem;">
-      <?= $editPatient ? '✏️ แก้ไขข้อมูลผู้ป่วย' : '➕ ลงทะเบียนผู้ป่วยใหม่' ?>
-    </h3>
+  <!-- Form Column (ซ้าย 1 ส่วน): ฟอร์มเพิ่ม หรือ แก้ไข -->
+  <div class="lg:col-span-1 bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+    <div class="flex items-center justify-between pb-3 mb-5 border-b border-slate-100">
+      <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+        <span><?= $editPatient ? '✏️' : '➕' ?></span>
+        <span><?= $editPatient ? 'แก้ไขข้อมูลผู้ป่วย' : 'ลงทะเบียนผู้ป่วยใหม่' ?></span>
+      </h3>
+      <?php if ($editPatient): ?>
+        <a href="patients.php" class="text-xs text-slate-500 hover:text-slate-700">ยกเลิก</a>
+      <?php endif; ?>
+    </div>
 
+    <!-- Alert notifications -->
     <?php if ($message): ?>
-      <div class="alert alert-success">✅ <?= htmlspecialchars($message) ?></div>
+      <div class="mb-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-1.5">
+        <span>✅</span> <span><?= htmlspecialchars($message) ?></span>
+      </div>
     <?php endif; ?>
     <?php if ($error): ?>
-      <div class="alert alert-danger">⚠️ <?= htmlspecialchars($error) ?></div>
+      <div class="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-1.5">
+        <span>⚠️</span> <span><?= htmlspecialchars($error) ?></span>
+      </div>
     <?php endif; ?>
 
-    <form method="POST" action="patients.php">
+    <form method="POST" action="patients.php" class="space-y-4">
       <input type="hidden" name="action" value="<?= $editPatient ? 'update' : 'create' ?>">
+      
       <?php if ($editPatient): ?>
         <input type="hidden" name="patient_id" value="<?= $editPatient['id'] ?>">
-        <div class="form-group">
-          <label class="form-label">รหัสประจำตัวผู้ป่วย (HN)</label>
-          <input type="text" class="form-control" value="<?= htmlspecialchars($editPatient['hn']) ?>" readonly style="background: #f1f5f9; font-weight: 700; color: #0369a1;">
-          <div class="form-hint">🔒 รหัส HN ถูกล็อกไม่สามารถแก้ไขได้</div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">รหัสประจำตัวผู้ป่วย (HN)</label>
+          <input type="text" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-slate-50 font-mono font-bold text-sky-700 cursor-not-allowed" value="<?= htmlspecialchars($editPatient['hn']) ?>" readonly>
+          <p class="text-xs text-slate-400 mt-1">🔒 รหัส HN ถูกล็อกไม่สามารถแก้ไขได้</p>
         </div>
       <?php endif; ?>
 
-      <div class="form-group">
-        <label class="form-label">ชื่อ-นามสกุล <span style="color: red;">*</span></label>
-        <input type="text" name="full_name" class="form-control" required placeholder="เช่น ธนากรณ์ เจริญสุข" value="<?= htmlspecialchars($editPatient['full_name'] ?? '') ?>">
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 mb-1">
+          ชื่อ-นามสกุล <span class="text-rose-500">*</span>
+        </label>
+        <input type="text" name="full_name" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600" required placeholder="เช่น ธนากรณ์ เจริญสุข" value="<?= htmlspecialchars($editPatient['full_name'] ?? '') ?>">
       </div>
 
-      <div class="form-group">
-        <label class="form-label">เบอร์โทรศัพท์ <span style="color: red;">*</span></label>
-        <input type="text" name="phone" class="form-control" required placeholder="เช่น 081-234-5678 หรือ +66812345678" value="<?= htmlspecialchars($editPatient['phone'] ?? '') ?>">
-        <div class="form-hint">💡 รองรับหลายรูปแบบ ระบบจะแปลงเป็นมาตรฐาน 0812345678 ให้อัตโนมัติ</div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 mb-1">
+          เบอร์โทรศัพท์ <span class="text-rose-500">*</span>
+        </label>
+        <input type="text" name="phone" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600" required placeholder="เช่น 081-234-5678 หรือ +66812345678" value="<?= htmlspecialchars($editPatient['phone'] ?? '') ?>">
+        <p class="text-xs text-slate-400 mt-1">💡 รองรับหลายรูปแบบ ระบบจะแปลงเป็นมาตรฐาน 0812345678 อัตโนมัติ</p>
       </div>
 
-      <div class="form-group">
-        <label class="form-label">วันเกิด <span style="color: red;">*</span></label>
-        <input type="date" name="birth_date" class="form-control" required value="<?= htmlspecialchars($editPatient['birth_date'] ?? '') ?>">
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 mb-1">
+          วันเกิด <span class="text-rose-500">*</span>
+        </label>
+        <input type="date" name="birth_date" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 bg-white" required value="<?= htmlspecialchars($editPatient['birth_date'] ?? '') ?>">
       </div>
 
-      <div style="display: flex; gap: 10px; margin-top: 1rem;">
+      <div class="pt-2">
         <?php if ($editPatient): ?>
-          <a href="patients.php" class="btn btn-secondary" style="flex: 1;">ยกเลิก</a>
-          <button type="submit" class="btn btn-primary" style="flex: 2;">บันทึกการแก้ไข</button>
+          <div class="flex gap-2">
+            <a href="patients.php" class="w-1/3 text-center px-3 py-2 rounded-lg text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all">
+              ยกเลิก
+            </a>
+            <button type="submit" class="w-2/3 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-emerald-800 to-emerald-900 hover:opacity-95 shadow-sm transition-all">
+              บันทึกการแก้ไข
+            </button>
+          </div>
         <?php else: ?>
-          <button type="submit" class="btn btn-primary" style="width: 100%;">
-            <span>➕</span> บันทึกข้อมูลผู้ป่วย
+          <button type="submit" class="w-full px-4 py-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-emerald-800 to-emerald-900 hover:opacity-95 shadow-sm transition-all flex items-center justify-center gap-1.5">
+            <span>➕</span> <span>บันทึกข้อมูลผู้ป่วย</span>
           </button>
         <?php endif; ?>
       </div>
     </form>
   </div>
 
-  <!-- Table Column (ขวา): ตารางผู้ป่วย + ช่องค้นหา -->
-  <div class="card">
-    <div class="card-header">
+  <!-- Table Column (ขวา 2 ส่วน): ตารางผู้ป่วย + ช่องค้นหา -->
+  <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-5 border-b border-slate-100">
       <div>
-        <h2 class="card-title">
-          <span>👥</span> รายชื่อผู้ป่วยในระบบ
-          <span class="badge badge-hn" style="font-size: 0.85rem;"><?= count($patients) ?> คน</span>
+        <h2 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2">
+          <span>👥</span> <span>รายชื่อผู้ป่วยในระบบ</span>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-sky-50 text-sky-700 border border-sky-200">
+            <?= count($patients) ?> คน
+          </span>
         </h2>
-        <div class="card-subtitle">ค้นหาจากชื่อ, HN หรือเบอร์โทรศัพท์</div>
+        <p class="text-xs text-slate-400 mt-0.5">ค้นหาจากชื่อ, HN หรือเบอร์โทรศัพท์</p>
       </div>
 
-      <form method="GET" action="patients.php" style="display: flex; gap: 8px;">
-        <input type="text" name="search" class="form-control" placeholder="🔍 ค้นหา (ชื่อ, HN, เบอร์)..." value="<?= htmlspecialchars($keyword) ?>">
-        <button type="submit" class="btn btn-secondary">ค้นหา</button>
+      <!-- Search Form -->
+      <form method="GET" action="patients.php" class="flex items-center gap-2">
+        <input type="text" name="search" class="px-3 py-1.5 text-xs sm:text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 w-44 sm:w-56" placeholder="🔍 ค้นหา (ชื่อ, HN, เบอร์)..." value="<?= htmlspecialchars($keyword) ?>">
+        <button type="submit" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-all">
+          ค้นหา
+        </button>
         <?php if ($keyword): ?>
-          <a href="patients.php" class="btn btn-secondary btn-sm" title="ล้างค่าค้นหา">ล้าง</a>
+          <a href="patients.php" class="px-2 py-1.5 text-xs text-slate-400 hover:text-slate-600" title="ล้างค่าค้นหา">ล้าง</a>
         <?php endif; ?>
       </form>
     </div>
 
-    <div class="table-responsive">
-      <table class="table">
-        <thead>
+    <!-- Table -->
+    <div class="overflow-x-auto rounded-xl border border-slate-100">
+      <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
+        <thead class="bg-slate-50 text-slate-500 uppercase text-xs font-semibold tracking-wider">
           <tr>
-            <th style="width: 100px;">HN</th>
-            <th>ชื่อ-นามสกุล</th>
-            <th>เบอร์โทร</th>
-            <th>วันเกิด</th>
-            <th>วันที่ลงทะเบียน</th>
-            <th style="width: 90px;">จัดการ</th>
+            <th class="px-4 py-3 w-24">HN</th>
+            <th class="px-4 py-3">ชื่อ-นามสกุล</th>
+            <th class="px-4 py-3">เบอร์โทร</th>
+            <th class="px-4 py-3">วันเกิด</th>
+            <th class="px-4 py-3">วันที่ลงทะเบียน</th>
+            <th class="px-4 py-3 w-20 text-center">จัดการ</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody class="divide-y divide-slate-100 bg-white">
           <?php if (empty($patients)): ?>
             <tr>
-              <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">
-                ไม่พบข้อมูลผู้ป่วย
+              <td colspan="6" class="text-center py-10 text-slate-400">
+                <div class="text-2xl mb-1">👤</div>
+                <div>ไม่พบข้อมูลผู้ป่วยที่ตรงกับการค้นหา</div>
               </td>
             </tr>
           <?php else: ?>
             <?php foreach ($patients as $p): ?>
-              <tr>
-                <td><span class="badge badge-hn"><?= htmlspecialchars($p['hn']) ?></span></td>
-                <td><strong><?= htmlspecialchars($p['full_name']) ?></strong></td>
-                <td><code><?= htmlspecialchars($p['phone']) ?></code></td>
-                <td><?= htmlspecialchars($p['birth_date']) ?></td>
-                <td><?= htmlspecialchars($p['registration_date']) ?></td>
-                <td>
-                  <a href="patients.php?edit_id=<?= $p['id'] ?>" class="btn btn-secondary btn-sm">
-                    ✏️ แก้ไข
+              <tr class="hover:bg-slate-50/80 transition-colors">
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-mono font-semibold bg-sky-50 text-sky-700 border border-sky-200">
+                    <?= htmlspecialchars($p['hn']) ?>
+                  </span>
+                </td>
+                <td class="px-4 py-3 font-semibold text-slate-800">
+                  <?= htmlspecialchars($p['full_name']) ?>
+                </td>
+                <td class="px-4 py-3 text-slate-600 font-mono text-xs">
+                  <?= htmlspecialchars($p['phone']) ?>
+                </td>
+                <td class="px-4 py-3 text-slate-600 whitespace-nowrap text-xs">
+                  <?= htmlspecialchars($p['birth_date']) ?>
+                </td>
+                <td class="px-4 py-3 text-slate-500 whitespace-nowrap text-xs">
+                  <?= htmlspecialchars($p['registration_date']) ?>
+                </td>
+                <td class="px-4 py-3 text-center whitespace-nowrap">
+                  <a href="patients.php?edit_id=<?= $p['id'] ?>" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-all">
+                    ✏️ <span>แก้ไข</span>
                   </a>
                 </td>
               </tr>

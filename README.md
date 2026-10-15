@@ -1,6 +1,6 @@
 # Bestar-one Luxury Clinic - ระบบนัดหมายคลินิก
 
-ระบบนัดหมายคลินิกขนาดเล็ก (Clinic Appointment System) ที่ออกแบบและพัฒนาขึ้นตามโจทย์ทดสอบโปรแกรมเมอร์ของ **Bestar-one** โดยเน้นความถูกต้องของ Business Logic, สถาปัตยกรรมโค้ดที่สะอาด เป็นระเบียบ จัดกลุ่มฟังก์ชันตามหน้าการทำงานในรูปแบบ OOP ภายใต้โฟลเดอร์ `/api`, การป้องกันการนัดหมายเวลาซ้อนกันอย่างแม่นยำ และการออกแบบฐานข้อมูลที่รองรับปริมาณข้อมูลขนาดใหญ่ระดับ 100,000+ แถวได้อย่างมีประสิทธิภาพ
+ระบบนัดหมายคลินิกขนาดเล็ก (Clinic Appointment System) ที่ออกแบบและพัฒนาขึ้นตามโจทย์ทดสอบโปรแกรมเมอร์ของ **Bestar-one** โดยเน้นความถูกต้องของ Business Logic, สถาปัตยกรรมโค้ดที่สะอาด เป็นระเบียบ จัดกลุ่มฟังก์ชันตามหน้าการทำงานในรูปแบบ OOP ภายใต้โฟลเดอร์ `/api`, หน้าเว็บตกแต่งด้วย **Tailwind CSS v3 (Play CDN)**, การป้องกันการนัดหมายเวลาซ้อนกันอย่างแม่นยำ และการออกแบบฐานข้อมูลที่รองรับปริมาณข้อมูลขนาดใหญ่ระดับ 100,000+ แถวได้อย่างมีประสิทธิภาพ
 
 ---
 
@@ -48,7 +48,7 @@
 
 ## สถาปัตยกรรมระบบและโครงสร้างไฟล์
 
-ระบบจัดกลุ่ม Business Logic เป็น **OOP Classes ภายใต้โฟลเดอร์ `/api`** โดยแยกตามฟังก์ชันของแต่ละหน้า เพื่อให้โค้ดเป็นระเบียบ สะอาด และสามารถเปิดอธิบายในคลิปวิดีโอได้อย่างชัดเจน:
+ระบบจัดกลุ่ม Business Logic เป็น **OOP Classes ภายใต้โฟลเดอร์ `/api`** โดยแยกตามฟังก์ชันของแต่ละหน้า และใช้ **Tailwind CSS v3 (Play CDN)** ในการตกแต่งหน้าตาให้สวยงาม Responsive ทันสมัย:
 
 ```
 bstarone_test/
@@ -59,18 +59,16 @@ bstarone_test/
 │   ├── Dockerfile              # PHP 8.2-FPM พร้อมโมดูล pdo_mysql
 │   └── nginx.conf              # Nginx configuration
 ├── docker-compose.yml          # Container orchestration (Web:8080, App, DB:3306)
-├── assets/
-│   └── style.css               # ธีม Luxury Clinic Responsive Design
 ├── db.php                      # การเชื่อมต่อฐานข้อมูล MySQL ด้วย PDO
 ├── api/                        # รวม OOP Classes แยกตามฟังก์ชันของแต่ละ Page:
 │   ├── PatientApi.php          # OOP Class จัดการผู้ป่วย, สร้าง HN, normalize เบอร์โทร
 │   ├── AppointmentApi.php      # OOP Class นัดหมายแพทย์, เช็คนัดชน, เปลี่ยนสถานะ
 │   └── ReportApi.php           # OOP Class รายงานสรุปและสถิติ (รองรับข้อมูล 100,000+ แถว)
-├── index.php                   # หน้ารายการนัดของวันนี้ (เรียกใช้ AppointmentApi)
-├── booking.php                 # หน้านัดหมายแพทย์ (เรียกใช้ AppointmentApi และ PatientApi)
-├── patients.php                # หน้าจัดการข้อมูลผู้ป่วย (เรียกใช้ PatientApi)
-├── reports.php                 # หน้ารายงานสรุปและสถิติ (เรียกใช้ ReportApi)
-├── header.php                  # ส่วนหัวเว็บและเมนูนำทาง
+├── index.php                   # หน้ารายการนัดของวันนี้ (Tailwind UI + AppointmentApi)
+├── booking.php                 # หน้านัดหมายแพทย์ (Tailwind UI + AppointmentApi, PatientApi)
+├── patients.php                # หน้าจัดการข้อมูลผู้ป่วย (Tailwind UI + PatientApi)
+├── reports.php                 # หน้ารายงานสรุปและสถิติ (Tailwind UI + ReportApi)
+├── header.php                  # ส่วนหัวเว็บ เมนูนำทาง และโหลด Tailwind CSS v3 Play CDN
 ├── footer.php                  # ส่วนท้ายเว็บ
 ├── tests/
 │   └── run_tests.php           # Automated Test Suite ทดสอบ OOP API ทั้งหมด
@@ -217,7 +215,7 @@ docker compose exec app php tests/run_tests.php
 ตามข้อกำหนดของแบบทดสอบ ("การใช้ AI และเครื่องมือช่วย: ใช้ได้ แต่ต้องระบุใน README ว่าใช้กับส่วนไหน"):
 
 * **ส่วนที่ใช้ AI ช่วย**:
-  1. ช่วยออกแบบชุดสีและโครงร่าง CSS (Luxury Medical Aesthetic)
+  1. ช่วยเลือกชุดคลาส Tailwind CSS v3 และจัดวาง Layout ให้มีความสวยงาม ทันสมัย (Luxury Medical Aesthetic)
   2. ช่วยคิดชุดข้อมูลตัวอย่าง (Seed Data) และ Test Cases เพื่อให้ครอบคลุม Edge Cases ของเบอร์โทรศัพท์และช่วงเวลา
   3. ช่วยจัดรูปแบบเอกสาร README ให้มีความเป็นมืออาชีพ สวยงาม และอ่านง่าย
 * **ส่วนที่ทำและเข้าใจด้วยตนเอง**:

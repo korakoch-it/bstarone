@@ -30,42 +30,63 @@ $activePage = 'booking';
 require_once __DIR__ . '/header.php';
 ?>
 
-<div class="card" style="max-width: 680px; margin: 0 auto;">
-  <div class="card-header">
+<div class="max-w-2xl mx-auto bg-white border border-slate-200 rounded-2xl shadow-sm p-6 sm:p-8 mb-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between pb-4 mb-6 border-b border-slate-100">
     <div>
-      <h2 class="card-title"><span>➕</span> สร้างนัดหมายแพทย์</h2>
-      <div class="card-subtitle">
+      <h2 class="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-2">
+        <span>➕</span> <span>สร้างนัดหมายแพทย์</span>
+      </h2>
+      <p class="text-xs sm:text-sm text-slate-400 mt-1">
         ระบุข้อมูลคนไข้ แพทย์ และช่วงเวลานัด ระบบจะตรวจสอบเวลานัดชนให้อัตโนมัติ
-      </div>
+      </p>
     </div>
-    <a href="index.php" class="btn btn-secondary btn-sm">← กลับไปหน้านัดวันนี้</a>
+    <a href="index.php" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-all">
+      ← กลับหน้านัดวันนี้
+    </a>
   </div>
 
+  <!-- Success Notification -->
   <?php if ($success): ?>
-    <div class="alert alert-success">
-      ✅ <?= htmlspecialchars($success) ?>
-      <div style="margin-top: 8px;">
-        <a href="index.php" class="btn btn-primary btn-sm">ดูรายการนัดวันนี้</a>
-        <a href="booking.php" class="btn btn-secondary btn-sm">สร้างนัดหมายเพิ่ม</a>
+    <div class="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm">
+      <div class="font-semibold flex items-center gap-2">
+        <span>✅</span> <span><?= htmlspecialchars($success) ?></span>
+      </div>
+      <div class="mt-3 flex gap-2">
+        <a href="index.php" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 transition-all">
+          ดูรายการนัดวันนี้
+        </a>
+        <a href="booking.php" class="px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-all">
+          สร้างนัดหมายเพิ่ม
+        </a>
       </div>
     </div>
   <?php endif; ?>
 
+  <!-- Overlap Conflict / Error Notification -->
   <?php if ($error): ?>
-    <div class="alert alert-danger">
-      <strong>⚠️ ไม่สามารถนัดหมายได้:</strong><br>
-      <?= htmlspecialchars($error) ?>
+    <div class="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm">
+      <div class="font-bold flex items-center gap-2 text-rose-900">
+        <span>⚠️</span> <span>ไม่สามารถนัดหมายได้ (ตรวจพบนัดชน):</span>
+      </div>
+      <div class="mt-1 text-rose-700">
+        <?= htmlspecialchars($error) ?>
+      </div>
     </div>
   <?php endif; ?>
 
-  <form method="POST" action="booking.php">
+  <form method="POST" action="booking.php" class="space-y-4">
     <!-- เลือกผู้ป่วย -->
-    <div class="form-group">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-        <label class="form-label" style="margin: 0;">เลือกผู้ป่วย <span style="color: red;">*</span></label>
-        <a href="patients.php" style="font-size: 0.8rem; color: #064e3b; text-decoration: none;">+ ลงทะเบียนคนไข้ใหม่</a>
+    <div>
+      <div class="flex items-center justify-between mb-1.5">
+        <label class="block text-xs sm:text-sm font-semibold text-slate-700">
+          เลือกผู้ป่วย <span class="text-rose-500">*</span>
+        </label>
+        <a href="patients.php" class="text-xs text-emerald-700 hover:underline font-medium">
+          + ลงทะเบียนคนไข้ใหม่
+        </a>
       </div>
-      <select name="patient_id" class="form-control" required>
+      <select name="patient_id" class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 bg-white" required>
         <option value="">-- กรุณาเลือกคนไข้ --</option>
         <?php foreach ($patients as $p): ?>
           <option value="<?= $p['id'] ?>" <?= (isset($_POST['patient_id']) && (int)$_POST['patient_id'] === (int)$p['id']) ? 'selected' : '' ?>>
@@ -76,9 +97,11 @@ require_once __DIR__ . '/header.php';
     </div>
 
     <!-- เลือกแพทย์ -->
-    <div class="form-group">
-      <label class="form-label">เลือกแพทย์ผู้ตรวจ <span style="color: red;">*</span></label>
-      <select name="doctor_id" class="form-control" required>
+    <div>
+      <label class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">
+        เลือกแพทย์ผู้ตรวจ <span class="text-rose-500">*</span>
+      </label>
+      <select name="doctor_id" class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 bg-white" required>
         <option value="">-- กรุณาเลือกแพทย์ --</option>
         <?php foreach ($doctors as $d): ?>
           <option value="<?= $d['id'] ?>" <?= (isset($_POST['doctor_id']) && (int)$_POST['doctor_id'] === (int)$d['id']) ? 'selected' : '' ?>>
@@ -89,33 +112,44 @@ require_once __DIR__ . '/header.php';
     </div>
 
     <!-- วันที่นัด -->
-    <div class="form-group">
-      <label class="form-label">วันที่นัดหมาย <span style="color: red;">*</span></label>
-      <input type="date" name="appointment_date" class="form-control" required value="<?= htmlspecialchars($_POST['appointment_date'] ?? date('Y-m-d')) ?>">
+    <div>
+      <label class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">
+        วันที่นัดหมาย <span class="text-rose-500">*</span>
+      </label>
+      <input type="date" name="appointment_date" class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 bg-white" required value="<?= htmlspecialchars($_POST['appointment_date'] ?? date('Y-m-d')) ?>">
     </div>
 
     <!-- เวลาเริ่ม - สิ้นสุด -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-      <div class="form-group">
-        <label class="form-label">เวลาเริ่มต้น <span style="color: red;">*</span></label>
-        <input type="time" name="start_time" class="form-control" required step="900" value="<?= htmlspecialchars($_POST['start_time'] ?? '10:00') ?>">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">
+          เวลาเริ่มต้น <span class="text-rose-500">*</span>
+        </label>
+        <input type="time" name="start_time" class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 bg-white" required step="900" value="<?= htmlspecialchars($_POST['start_time'] ?? '10:00') ?>">
       </div>
-      <div class="form-group">
-        <label class="form-label">เวลาสิ้นสุด <span style="color: red;">*</span></label>
-        <input type="time" name="end_time" class="form-control" required step="900" value="<?= htmlspecialchars($_POST['end_time'] ?? '11:00') ?>">
+      <div>
+        <label class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">
+          เวลาสิ้นสุด <span class="text-rose-500">*</span>
+        </label>
+        <input type="time" name="end_time" class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 bg-white" required step="900" value="<?= htmlspecialchars($_POST['end_time'] ?? '11:00') ?>">
       </div>
     </div>
 
-    <!-- อาการ/หมายเหตุ -->
-    <div class="form-group">
-      <label class="form-label">อาการเบื้องต้น / หัตถการที่นัดหมาย</label>
-      <textarea name="note" class="form-control" rows="2" placeholder="เช่น ปรึกษาเสริมจมูก, ฉีดบท็อกซ์, ติดตามผล"><?= htmlspecialchars($_POST['note'] ?? '') ?></textarea>
+    <!-- อาการ / หมายเหตุ -->
+    <div>
+      <label class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">
+        อาการเบื้องต้น / หัตถการที่นัดหมาย
+      </label>
+      <textarea name="note" rows="2" class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600" placeholder="เช่น ปรึกษาเสริมจมูก, ฉีดบท็อกซ์, ติดตามอาการหลังทำ"><?= htmlspecialchars($_POST['note'] ?? '') ?></textarea>
     </div>
 
-    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 1.5rem;">
-      <a href="index.php" class="btn btn-secondary">ยกเลิก</a>
-      <button type="submit" class="btn btn-gold">
-        <span>📅</span> บันทึกนัดหมาย
+    <!-- Action Buttons -->
+    <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+      <a href="index.php" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all">
+        ยกเลิก
+      </a>
+      <button type="submit" class="px-5 py-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 shadow-sm transition-all flex items-center gap-1.5">
+        <span>📅</span> <span>ยืนยันบันทึกนัดหมาย</span>
       </button>
     </div>
   </form>
