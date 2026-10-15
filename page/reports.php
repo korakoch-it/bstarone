@@ -1,10 +1,10 @@
 <?php
 // =====================================================================
-// reports.php - หน้ารายงานสรุปและสถิติ (Summary Reports)
+// page/reports.php - หน้ารายงานสรุปและสถิติ (Summary Reports)
 // =====================================================================
 
-require_once __DIR__ . '/db.php';
-require_once __DIR__ . '/api/ReportApi.php';
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../api/ReportApi.php';
 
 $reportApi = new ReportApi($pdo);
 
@@ -38,7 +38,7 @@ require_once __DIR__ . '/header.php';
     </div>
 
     <!-- Date Range Filter -->
-    <form method="GET" action="reports.php" class="flex flex-wrap items-center gap-2">
+    <form method="GET" action="/page/reports.php" class="flex flex-wrap items-center gap-2">
       <span class="text-xs font-semibold text-slate-600">ช่วงวันที่:</span>
       <input type="date" name="start_date" class="px-3 py-1.5 text-xs sm:text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 bg-white" value="<?= htmlspecialchars($startDate) ?>">
       <span class="text-xs text-slate-400">ถึง</span>

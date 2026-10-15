@@ -1,11 +1,11 @@
 <?php
 // =====================================================================
-// booking.php - หน้านัดหมายแพทย์ (Appointment Booking & Overlap Check)
+// page/booking.php - หน้านัดหมายแพทย์ (Appointment Booking & Overlap Check)
 // =====================================================================
 
-require_once __DIR__ . '/db.php';
-require_once __DIR__ . '/api/AppointmentApi.php';
-require_once __DIR__ . '/api/PatientApi.php';
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../api/AppointmentApi.php';
+require_once __DIR__ . '/../api/PatientApi.php';
 
 $appointmentApi = new AppointmentApi($pdo);
 $patientApi = new PatientApi($pdo);
@@ -41,7 +41,7 @@ require_once __DIR__ . '/header.php';
         ระบุข้อมูลคนไข้ แพทย์ และช่วงเวลานัด ระบบจะตรวจสอบเวลานัดชนให้อัตโนมัติ
       </p>
     </div>
-    <a href="index.php" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-all">
+    <a href="/page/index.php" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-all">
       ← กลับหน้านัดวันนี้
     </a>
   </div>
@@ -53,10 +53,10 @@ require_once __DIR__ . '/header.php';
         <span>✅</span> <span><?= htmlspecialchars($success) ?></span>
       </div>
       <div class="mt-3 flex gap-2">
-        <a href="index.php" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 transition-all">
+        <a href="/page/index.php" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 transition-all">
           ดูรายการนัดวันนี้
         </a>
-        <a href="booking.php" class="px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-all">
+        <a href="/page/booking.php" class="px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-all">
           สร้างนัดหมายเพิ่ม
         </a>
       </div>
@@ -75,14 +75,14 @@ require_once __DIR__ . '/header.php';
     </div>
   <?php endif; ?>
 
-  <form method="POST" action="booking.php" class="space-y-4">
+  <form method="POST" action="/page/booking.php" class="space-y-4">
     <!-- เลือกผู้ป่วย -->
     <div>
       <div class="flex items-center justify-between mb-1.5">
         <label class="block text-xs sm:text-sm font-semibold text-slate-700">
           เลือกผู้ป่วย <span class="text-rose-500">*</span>
         </label>
-        <a href="patients.php" class="text-xs text-emerald-700 hover:underline font-medium">
+        <a href="/page/patients.php" class="text-xs text-emerald-700 hover:underline font-medium">
           + ลงทะเบียนคนไข้ใหม่
         </a>
       </div>

@@ -44,7 +44,7 @@
         ✦
       </div>
       <div>
-        <a href="index.php" class="no-underline text-white block">
+        <a href="/page/index.php" class="no-underline text-white block">
           <div class="text-base sm:text-lg font-bold tracking-tight">BESTAR-ONE LUXURY CLINIC</div>
           <div class="text-xs text-emerald-300 font-medium tracking-wide uppercase">Smart Medical Scheduling System</div>
         </a>
@@ -53,16 +53,16 @@
 
     <!-- Navigation Tabs -->
     <nav class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto max-w-full pb-1 sm:pb-0">
-      <a href="index.php" class="px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 <?= ($activePage ?? '') === 'today' ? 'bg-white text-emerald-900 font-semibold shadow-sm' : 'text-slate-200 border border-white/10 hover:bg-white/10 hover:text-white' ?>">
+      <a href="/page/index.php" class="px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 <?= ($activePage ?? '') === 'today' ? 'bg-white text-emerald-900 font-semibold shadow-sm' : 'text-slate-200 border border-white/10 hover:bg-white/10 hover:text-white' ?>">
         <span>📅</span> <span>รายการนัดวันนี้</span>
       </a>
-      <a href="booking.php" class="px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 <?= ($activePage ?? '') === 'booking' ? 'bg-white text-emerald-900 font-semibold shadow-sm' : 'text-slate-200 border border-white/10 hover:bg-white/10 hover:text-white' ?>">
+      <a href="/page/booking.php" class="px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 <?= ($activePage ?? '') === 'booking' ? 'bg-white text-emerald-900 font-semibold shadow-sm' : 'text-slate-200 border border-white/10 hover:bg-white/10 hover:text-white' ?>">
         <span>➕</span> <span>นัดหมายแพทย์</span>
       </a>
-      <a href="patients.php" class="px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 <?= ($activePage ?? '') === 'patients' ? 'bg-white text-emerald-900 font-semibold shadow-sm' : 'text-slate-200 border border-white/10 hover:bg-white/10 hover:text-white' ?>">
+      <a href="/page/patients.php" class="px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 <?= ($activePage ?? '') === 'patients' ? 'bg-white text-emerald-900 font-semibold shadow-sm' : 'text-slate-200 border border-white/10 hover:bg-white/10 hover:text-white' ?>">
         <span>👥</span> <span>ข้อมูลผู้ป่วย</span>
       </a>
-      <a href="reports.php" class="px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 <?= ($activePage ?? '') === 'reports' ? 'bg-white text-emerald-900 font-semibold shadow-sm' : 'text-slate-200 border border-white/10 hover:bg-white/10 hover:text-white' ?>">
+      <a href="/page/reports.php" class="px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 <?= ($activePage ?? '') === 'reports' ? 'bg-white text-emerald-900 font-semibold shadow-sm' : 'text-slate-200 border border-white/10 hover:bg-white/10 hover:text-white' ?>">
         <span>📊</span> <span>รายงานสรุป</span>
       </a>
     </nav>

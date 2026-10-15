@@ -1,10 +1,10 @@
 <?php
 // =====================================================================
-// patients.php - ระบบจัดการข้อมูลผู้ป่วย (Patient Management)
+// page/patients.php - ระบบจัดการข้อมูลผู้ป่วย (Patient Management)
 // =====================================================================
 
-require_once __DIR__ . '/db.php';
-require_once __DIR__ . '/api/PatientApi.php';
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../api/PatientApi.php';
 
 $patientApi = new PatientApi($pdo);
 
@@ -61,7 +61,7 @@ require_once __DIR__ . '/header.php';
         <span><?= $editPatient ? 'แก้ไขข้อมูลผู้ป่วย' : 'ลงทะเบียนผู้ป่วยใหม่' ?></span>
       </h3>
       <?php if ($editPatient): ?>
-        <a href="patients.php" class="text-xs text-slate-500 hover:text-slate-700">ยกเลิก</a>
+        <a href="/page/patients.php" class="text-xs text-slate-500 hover:text-slate-700">ยกเลิก</a>
       <?php endif; ?>
     </div>
 
@@ -77,7 +77,7 @@ require_once __DIR__ . '/header.php';
       </div>
     <?php endif; ?>
 
-    <form method="POST" action="patients.php" class="space-y-4">
+    <form method="POST" action="/page/patients.php" class="space-y-4">
       <input type="hidden" name="action" value="<?= $editPatient ? 'update' : 'create' ?>">
       
       <?php if ($editPatient): ?>
@@ -114,7 +114,7 @@ require_once __DIR__ . '/header.php';
       <div class="pt-2">
         <?php if ($editPatient): ?>
           <div class="flex gap-2">
-            <a href="patients.php" class="w-1/3 text-center px-3 py-2 rounded-lg text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all">
+            <a href="/page/patients.php" class="w-1/3 text-center px-3 py-2 rounded-lg text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all">
               ยกเลิก
             </a>
             <button type="submit" class="w-2/3 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-emerald-800 to-emerald-900 hover:opacity-95 shadow-sm transition-all">
@@ -144,13 +144,13 @@ require_once __DIR__ . '/header.php';
       </div>
 
       <!-- Search Form -->
-      <form method="GET" action="patients.php" class="flex items-center gap-2">
+      <form method="GET" action="/page/patients.php" class="flex items-center gap-2">
         <input type="text" name="search" class="px-3 py-1.5 text-xs sm:text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 w-44 sm:w-56" placeholder="🔍 ค้นหา (ชื่อ, HN, เบอร์)..." value="<?= htmlspecialchars($keyword) ?>">
         <button type="submit" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-all">
           ค้นหา
         </button>
         <?php if ($keyword): ?>
-          <a href="patients.php" class="px-2 py-1.5 text-xs text-slate-400 hover:text-slate-600" title="ล้างค่าค้นหา">ล้าง</a>
+          <a href="/page/patients.php" class="px-2 py-1.5 text-xs text-slate-400 hover:text-slate-600" title="ล้างค่าค้นหา">ล้าง</a>
         <?php endif; ?>
       </form>
     </div>
@@ -197,7 +197,7 @@ require_once __DIR__ . '/header.php';
                   <?= htmlspecialchars($p['registration_date']) ?>
                 </td>
                 <td class="px-4 py-3 text-center whitespace-nowrap">
-                  <a href="patients.php?edit_id=<?= $p['id'] ?>" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-all">
+                  <a href="/page/patients.php?edit_id=<?= $p['id'] ?>" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-all">
                     ✏️ <span>แก้ไข</span>
                   </a>
                 </td>
