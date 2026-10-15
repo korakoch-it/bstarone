@@ -2,6 +2,9 @@
 -- Bestar-one Clinic Appointment System Seed Data
 -- =====================================================================
 
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
+
 USE `clinic_db`;
 
 -- ---------------------------------------------------------------------

@@ -4,6 +4,9 @@
 -- Designed for high performance, data integrity, and 100,000+ scale
 -- =====================================================================
 
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
+
 CREATE DATABASE IF NOT EXISTS `clinic_db` 
 CHARACTER SET utf8mb4 
 COLLATE utf8mb4_unicode_ci;
@@ -16,7 +19,7 @@ USE `clinic_db`;
 CREATE TABLE IF NOT EXISTS `doctors` (
     `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `name` VARCHAR(150) NOT NULL COMMENT 'ชื่อ-นามสกุลแพทย์',
-    `specialty` VARCHAR(100) NOT NULL COMMENT 'ความเชี่ยวชาญ/สาขา',
+    `specialty` VARCHAR(255) NOT NULL COMMENT 'ความเชี่ยวชาญ/สาขา',
     `phone` VARCHAR(20) DEFAULT NULL COMMENT 'เบอร์โทรติดต่อ',
     `is_active` TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'สถานะพร้อมตรวจ (1=Active, 0=Inactive)',
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
