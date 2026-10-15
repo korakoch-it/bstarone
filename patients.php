@@ -4,7 +4,9 @@
 // =====================================================================
 
 require_once __DIR__ . '/db.php';
-require_once __DIR__ . '/functions.php';
+require_once __DIR__ . '/api/PatientApi.php';
+
+$patientApi = new PatientApi($pdo);
 
 $message = '';
 $error = '';
@@ -16,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // 1. เพิ่มผู้ป่วยใหม่
     if ($action === 'create') {
         try {
-            $newPatient = createPatient($pdo, $_POST);
+            $newPatient = $patientApi->create($_POST);
             $message = "ลงทะเบียนผู้ป่วยใหม่สำเร็จ รหัส HN: " . $newPatient['hn'];
         } catch (Exception $e) {
             $error = $e->getMessage();
@@ -26,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     elseif ($action === 'update') {
         $id = (int)($_POST['patient_id'] ?? 0);
         try {
-            updatePatient($pdo, $id, $_POST);
+            $patientApi->update($id, $_POST);
             $message = "แก้ไขข้อมูลผู้ป่วยเรียบร้อยแล้ว";
         } catch (Exception $e) {
             $error = $e->getMessage();
@@ -36,12 +38,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // ค้นหา
 $keyword = trim($_GET['search'] ?? '');
-$patients = searchPatients($pdo, $keyword);
+$patients = $patientApi->search($keyword);
 
 // ตรวจสอบว่ากำลังกดแก้ไขใครอยู่หรือไม่
 $editPatient = null;
 if (isset($_GET['edit_id'])) {
-    $editPatient = getPatientById($pdo, (int)$_GET['edit_id']);
+    $editPatient = $patientApi->getById((int)$_GET['edit_id']);
 }
 
 $pageTitle = 'จัดการข้อมูลผู้ป่วย';

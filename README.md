@@ -1,6 +1,6 @@
 # Bestar-one Luxury Clinic - ระบบนัดหมายคลินิก
 
-ระบบนัดหมายคลินิกขนาดเล็ก (Clinic Appointment System) ที่ออกแบบและพัฒนาขึ้นตามโจทย์ทดสอบโปรแกรมเมอร์ของ **Bestar-one** โดยเน้นความถูกต้องของ Business Logic, สถาปัตยกรรมโค้ดที่สะอาด อ่านเข้าใจง่าย ไม่ซับซ้อนเกินความจำเป็น (Clean & Flat PHP), การป้องกันการนัดหมายเวลาซ้อนกันอย่างแม่นยำ และการออกแบบฐานข้อมูลที่รองรับปริมาณข้อมูลขนาดใหญ่ระดับ 100,000+ แถวได้อย่างมีประสิทธิภาพ
+ระบบนัดหมายคลินิกขนาดเล็ก (Clinic Appointment System) ที่ออกแบบและพัฒนาขึ้นตามโจทย์ทดสอบโปรแกรมเมอร์ของ **Bestar-one** โดยเน้นความถูกต้องของ Business Logic, สถาปัตยกรรมโค้ดที่สะอาด เป็นระเบียบ จัดกลุ่มฟังก์ชันตามหน้าการทำงานในรูปแบบ OOP ภายใต้โฟลเดอร์ `/api`, การป้องกันการนัดหมายเวลาซ้อนกันอย่างแม่นยำ และการออกแบบฐานข้อมูลที่รองรับปริมาณข้อมูลขนาดใหญ่ระดับ 100,000+ แถวได้อย่างมีประสิทธิภาพ
 
 ---
 
@@ -48,7 +48,7 @@
 
 ## สถาปัตยกรรมระบบและโครงสร้างไฟล์
 
-ระบบได้รับการออกแบบให้อยู่ในรูปแบบ **Classic Flat PHP** ที่เรียบง่าย คลีน และตรงไปตรงมา ไม่ซับซ้อนเกินความจำเป็น เพื่อให้อ่านเข้าใจง่ายและสามารถเปิดโค้ดอธิบายในคลิปวิดีโอได้อย่างเป็นธรรมชาติที่สุด:
+ระบบจัดกลุ่ม Business Logic เป็น **OOP Classes ภายใต้โฟลเดอร์ `/api`** โดยแยกตามฟังก์ชันของแต่ละหน้า เพื่อให้โค้ดเป็นระเบียบ สะอาด และสามารถเปิดอธิบายในคลิปวิดีโอได้อย่างชัดเจน:
 
 ```
 bstarone_test/
@@ -61,24 +61,19 @@ bstarone_test/
 ├── docker-compose.yml          # Container orchestration (Web:8080, App, DB:3306)
 ├── assets/
 │   └── style.css               # ธีม Luxury Clinic Responsive Design
-├── db.php                      # การเชื่อมต่อฐานข้อมูล MySQL ด้วย PDO (เรียบง่าย 15 บรรทัด)
-├── functions.php               # รวม Business Logic ทั้งหมด:
-│                               #  - normalizePhone()
-│                               #  - generateHN()
-│                               #  - checkDoctorConflict() (เช็คนัดชน)
-│                               #  - getTodayAppointments()
-│                               #  - updateAppointmentStatus()
-│                               #  - createAppointment()
-│                               #  - searchPatients()
-│                               #  - getReportSummary()
-├── index.php                   # หน้ารายการนัดของวันนี้ + ปุ่มปรับสถานะ
-├── booking.php                 # หน้านัดหมายแพทย์ + กลไกป้องกันนัดชน
-├── patients.php                # หน้าจัดการข้อมูลผู้ป่วย (ค้นหา, เพิ่ม, แก้ไข)
-├── reports.php                 # หน้ารายงานสรุปและสถิติ (รองรับข้อมูล 100,000+ แถว)
+├── db.php                      # การเชื่อมต่อฐานข้อมูล MySQL ด้วย PDO
+├── api/                        # รวม OOP Classes แยกตามฟังก์ชันของแต่ละ Page:
+│   ├── PatientApi.php          # OOP Class จัดการผู้ป่วย, สร้าง HN, normalize เบอร์โทร
+│   ├── AppointmentApi.php      # OOP Class นัดหมายแพทย์, เช็คนัดชน, เปลี่ยนสถานะ
+│   └── ReportApi.php           # OOP Class รายงานสรุปและสถิติ (รองรับข้อมูล 100,000+ แถว)
+├── index.php                   # หน้ารายการนัดของวันนี้ (เรียกใช้ AppointmentApi)
+├── booking.php                 # หน้านัดหมายแพทย์ (เรียกใช้ AppointmentApi และ PatientApi)
+├── patients.php                # หน้าจัดการข้อมูลผู้ป่วย (เรียกใช้ PatientApi)
+├── reports.php                 # หน้ารายงานสรุปและสถิติ (เรียกใช้ ReportApi)
 ├── header.php                  # ส่วนหัวเว็บและเมนูนำทาง
 ├── footer.php                  # ส่วนท้ายเว็บ
 ├── tests/
-│   └── run_tests.php           # Automated Test Suite ทดสอบตรรกะทั้งหมด
+│   └── run_tests.php           # Automated Test Suite ทดสอบ OOP API ทั้งหมด
 ├── .env.example                # ตัวอย่างไฟล์ Environment Variables
 └── README.md
 ```
@@ -229,7 +224,7 @@ docker compose exec app php tests/run_tests.php
   - การออกแบบ Database Schema และ Relational Foreign Keys
   - การกำหนดสูตรคณิตศาสตร์และเงื่อนไข SQL สำหรับการตรวจสอบนัดชน (`start_time < new_end AND end_time > new_start`)
   - การเลือกตำแหน่ง B-Tree Composite Indexing เพื่อรองรับข้อมูลขนาด 100,000+ แถว
-  - โค้ดในส่วน Regular Expression สำหรับ Phone Normalization และฟังก์ชันใน `functions.php`
+  - โค้ด OOP Classes ในโฟลเดอร์ `/api` (`PatientApi`, `AppointmentApi`, `ReportApi`)
   - ผู้สมัครสามารถอธิบายที่มา ตรรกะ และการทำงานของโค้ดทุกส่วนได้อย่างละเอียดในคลิปวิดีโอ
 
 ---
@@ -259,7 +254,7 @@ docker compose exec app php tests/run_tests.php
    - ชี้ไปที่ `idx_appointments_report_date_status`: อธิบายว่าเป็น Covering Index สำหรับหน้ารายงาน
 
 ### ส่วนที่ 3: เปิดโค้ดส่วนเช็คนัดชนกันและอธิบายทีละส่วน (3 นาที)
-1. เปิดไฟล์ `functions.php` ฟังก์ชัน `checkDoctorConflict`
+1. เปิดไฟล์ `api/AppointmentApi.php` ฟังก์ชัน `checkConflict`
 2. อธิบายเงื่อนไข SQL:
    - `doctor_id = :doctor_id AND appointment_date = :date`
    - `status != 'cancelled'` (อธิบายว่าทำไมนัดที่ยกเลิกไม่นับว่าชน)

@@ -4,22 +4,26 @@
 // =====================================================================
 
 require_once __DIR__ . '/db.php';
-require_once __DIR__ . '/functions.php';
+require_once __DIR__ . '/api/AppointmentApi.php';
+require_once __DIR__ . '/api/PatientApi.php';
+
+$appointmentApi = new AppointmentApi($pdo);
+$patientApi = new PatientApi($pdo);
 
 $success = '';
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        $newId = createAppointment($pdo, $_POST);
+        $newId = $appointmentApi->create($_POST);
         $success = "สร้างนัดหมายสำเร็จเรียบร้อยแล้ว!";
     } catch (Exception $e) {
         $error = $e->getMessage();
     }
 }
 
-$patients = searchPatients($pdo, '', 100);
-$doctors = getDoctors($pdo);
+$patients = $patientApi->search('', 100);
+$doctors = $appointmentApi->getDoctors();
 
 $pageTitle = 'สร้างนัดหมายแพทย์';
 $activePage = 'booking';

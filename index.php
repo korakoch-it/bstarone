@@ -4,7 +4,9 @@
 // =====================================================================
 
 require_once __DIR__ . '/db.php';
-require_once __DIR__ . '/functions.php';
+require_once __DIR__ . '/api/AppointmentApi.php';
+
+$appointmentApi = new AppointmentApi($pdo);
 
 // รับค่าเปลี่ยนสถานะเมื่อมีการกดเปลี่ยน (POST)
 $message = '';
@@ -13,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $apptId = (int)($_POST['appointment_id'] ?? 0);
     $newStatus = trim($_POST['status'] ?? '');
     try {
-        updateAppointmentStatus($pdo, $apptId, $newStatus);
+        $appointmentApi->updateStatus($apptId, $newStatus);
         $message = "อัปเดตสถานะนัดหมายเรียบร้อยแล้ว";
     } catch (Exception $e) {
         $error = $e->getMessage();
@@ -24,9 +26,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 $selectedDoctor = !empty($_GET['doctor_id']) ? (int)$_GET['doctor_id'] : null;
 $selectedDate = !empty($_GET['date']) ? trim($_GET['date']) : date('Y-m-d');
 
-// ดึงข้อมูล
-$doctors = getDoctors($pdo);
-$appointments = getTodayAppointments($pdo, $selectedDoctor, $selectedDate);
+// ดึงข้อมูลผ่าน OOP Class
+$doctors = $appointmentApi->getDoctors();
+$appointments = $appointmentApi->getToday($selectedDoctor, $selectedDate);
 
 $pageTitle = 'รายการนัดหมายประจำวัน';
 $activePage = 'today';

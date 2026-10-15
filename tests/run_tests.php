@@ -1,18 +1,20 @@
 <?php
 
 /**
- * BESTAR-ONE CLINIC - AUTOMATED TEST SUITE (FLAT PHP)
+ * BESTAR-ONE CLINIC - AUTOMATED TEST SUITE (OOP / API CLASSES)
  * Run via CLI: php tests/run_tests.php
  * Covers:
- * 1. Phone number normalization (all test formats from prompt)
- * 2. Overlap collision algorithm (all edge cases & back-to-back rule)
+ * 1. Phone number normalization (PatientApi::normalizePhone)
+ * 2. Overlap collision algorithm (AppointmentApi)
  * 3. Cancelled appointment exclusion rule
- * 4. HN sequential code generation
+ * 4. HN sequential code generation (PatientApi::generateHN)
  */
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/../functions.php';
+require_once __DIR__ . '/../api/PatientApi.php';
+require_once __DIR__ . '/../api/AppointmentApi.php';
+require_once __DIR__ . '/../api/ReportApi.php';
 
 class TestRunner
 {
@@ -43,14 +45,34 @@ class TestRunner
 
 $runner = new TestRunner();
 
+// Mock PDO or connect if available
+$pdo = null;
+try {
+    $host = getenv('DB_HOST') ?: 'db';
+    $port = getenv('DB_PORT') ?: '3306';
+    $dbname = getenv('DB_NAME') ?: 'clinic_db';
+    $user = getenv('DB_USER') ?: 'clinic_user';
+    $pass = getenv('DB_PASS') ?: 'clinic_pass';
+    $pdo = new PDO("mysql:host={$host};port={$port};dbname={$dbname};charset=utf8mb4", $user, $pass, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    ]);
+} catch (Throwable $e) {
+    // If running in standalone test environment without DB, use SQLite in memory for testing PDO methods
+    $pdo = new PDO('sqlite::memory:');
+}
+
+$patientApi = new PatientApi($pdo);
+$appointmentApi = new AppointmentApi($pdo);
+
 echo "\n" . str_repeat('=', 60) . "\n";
-echo "BESTAR-ONE CLINIC APPOINTMENT SYSTEM - TEST SUITE\n";
+echo "BESTAR-ONE CLINIC APPOINTMENT SYSTEM - TEST SUITE (OOP /api)\n";
 echo str_repeat('=', 60) . "\n\n";
 
 // =====================================================================
-// 1. Phone Normalization Tests
+// 1. Phone Normalization Tests (PatientApi)
 // =====================================================================
-echo "--- 1. Testing Phone Normalization Engine ---\n";
+echo "--- 1. Testing PatientApi::normalizePhone ---\n";
 
 $phoneCases = [
     '081-234-5678'      => '0812345678',
@@ -65,7 +87,7 @@ $phoneCases = [
 
 foreach ($phoneCases as $input => $expected) {
     try {
-        $actual = normalizePhone($input);
+        $actual = $patientApi->normalizePhone($input);
         $runner->assert($actual === $expected, "Normalize '{$input}'", "Expected '{$expected}', got '{$actual}'");
     } catch (\Throwable $e) {
         $runner->assert(false, "Normalize '{$input}'", "Exception: " . $e->getMessage());
@@ -76,7 +98,7 @@ foreach ($phoneCases as $input => $expected) {
 $invalidPhones = ['12345', 'abcdefghij', '+1234567890', ''];
 foreach ($invalidPhones as $invalid) {
     try {
-        normalizePhone($invalid);
+        $patientApi->normalizePhone($invalid);
         $runner->assert(false, "Reject invalid phone '{$invalid}'", "Expected exception but none thrown");
     } catch (\InvalidArgumentException $e) {
         $runner->assert(true, "Reject invalid phone '{$invalid}'");

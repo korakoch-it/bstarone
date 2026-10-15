@@ -4,7 +4,9 @@
 // =====================================================================
 
 require_once __DIR__ . '/db.php';
-require_once __DIR__ . '/functions.php';
+require_once __DIR__ . '/api/ReportApi.php';
+
+$reportApi = new ReportApi($pdo);
 
 $startDate = $_GET['start_date'] ?? date('Y-m-01');
 $endDate = $_GET['end_date'] ?? date('Y-m-d');
@@ -13,7 +15,7 @@ $error = '';
 $report = null;
 
 try {
-    $report = getReportSummary($pdo, $startDate, $endDate);
+    $report = $reportApi->getSummary($startDate, $endDate);
 } catch (Exception $e) {
     $error = $e->getMessage();
 }
