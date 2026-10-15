@@ -1,6 +1,6 @@
 # Bestar-one Luxury Clinic - ระบบนัดหมายคลินิก
 
-ระบบนัดหมายคลินิกขนาดเล็ก (Clinic Appointment System) ที่ออกแบบและพัฒนาขึ้นตามโจทย์ทดสอบโปรแกรมเมอร์ของ **Bestar-one** โดยเน้นความถูกต้องของ Business Logic, สถาปัตยกรรมโค้ดที่สะอาด (Clean Architecture & OOP), การป้องกันการนัดหมายเวลาซ้อนกันอย่างแม่นยำ และการออกแบบฐานข้อมูลที่รองรับปริมาณข้อมูลขนาดใหญ่ระดับ 100,000+ แถวได้อย่างมีประสิทธิภาพ
+ระบบนัดหมายคลินิกขนาดเล็ก (Clinic Appointment System) ที่ออกแบบและพัฒนาขึ้นตามโจทย์ทดสอบโปรแกรมเมอร์ของ **Bestar-one** โดยเน้นความถูกต้องของ Business Logic, สถาปัตยกรรมโค้ดที่สะอาด อ่านเข้าใจง่าย ไม่ซับซ้อนเกินความจำเป็น (Clean & Flat PHP), การป้องกันการนัดหมายเวลาซ้อนกันอย่างแม่นยำ และการออกแบบฐานข้อมูลที่รองรับปริมาณข้อมูลขนาดใหญ่ระดับ 100,000+ แถวได้อย่างมีประสิทธิภาพ
 
 ---
 
@@ -22,24 +22,24 @@
 ระบบครอบคลุมทั้ง 4 ฟีเจอร์หลักตามเกณฑ์ขั้นต่ำของโจทย์อย่างสมบูรณ์:
 
 1. **ระบบจัดการข้อมูลผู้ป่วย (Patient Management)**
-   - เพิ่ม แก้ไข และค้นหาผู้ป่วยแบบ Live Search ตามชื่อ-นามสกุล, รหัส HN หรือเบอร์โทรศัพท์
-   - ระบบออกรหัส HN อัตโนมัติในรูปแบบ `HN000001` โดยเรียงลำดับต่อเนื่อง ไม่ซ้ำซ้อน และใช้ DB Transaction Lock เพื่อป้องกัน Race Condition
+   - เพิ่ม แก้ไข และค้นหาผู้ป่วยตามชื่อ-นามสกุล, รหัส HN หรือเบอร์โทรศัพท์
+   - ระบบออกรหัส HN อัตโนมัติในรูปแบบ `HN000001` โดยเรียงลำดับต่อเนื่อง ไม่ซ้ำซ้อน
    - **Phone Normalization Engine**: แปลงเบอร์โทรศัพท์ทุกรูปแบบ เช่น `081-234-5678`, `+66812345678`, `66 81 234 5678`, `+66 81-234-5678` ให้ถูกจัดเก็บเป็นมาตรฐาน `0812345678` เสมอ
 
 2. **ระบบนัดหมายแพทย์ (Appointment Scheduling)**
    - นัดหมายโดยเลือกผู้ป่วย, แพทย์, วันที่, เวลาเริ่มต้น และเวลาสิ้นสุด
    - มีรายชื่อแพทย์ตัวอย่างในฐานข้อมูลพร้อมสาขาความเชี่ยวชาญ
    - **กลไกป้องกันนัดชน**: แพทย์คนเดียวกันไม่สามารถมีนัดเวลาซ้อนกันได้ ทั้งแบบซ้อนกันทั้งหมดหรือบางส่วน
-   - มีระบบแจ้งเตือนแบบ Real-time บนหน้าจอก่อนกดยืนยันหากช่วงเวลาดังกล่าวมีนัดแล้ว
+   - มีระบบแจ้งเตือนชัดเจนทันทีหากช่วงเวลาดังกล่าวมีนัดแล้ว
    - นัดที่ถูกยกเลิก (`status = 'cancelled'`) จะไม่ถูกนับว่าชน
 
 3. **หน้ารายการนัดของวันนี้ (Today's Schedule & Queue)**
    - แสดงคิวนัดหมายของวันนี้เรียงลำดับตามเวลา (`start_time ASC`)
    - กรองแสดงผลเฉพาะแพทย์แต่ละท่าน หรือดูแพทย์ทุกคนได้
-   - ปรับเปลี่ยนสถานะได้ทันทีผ่าน Asynchronous Dropdown: **รอ** (pending) / **มาแล้ว** (arrived) / **ยกเลิก** (cancelled) โดยไม่ต้องโหลดหน้าเว็บใหม่
+   - ปรับเปลี่ยนสถานะได้ทันที: **รอ** (pending) / **มาแล้ว** (arrived) / **ยกเลิก** (cancelled)
 
 4. **รายงานสรุปและสถิติ (High-Volume Analytics Dashboard)**
-   - เลือกช่วงวันที่ได้อิสระ พร้อมปุ่มลัด (วันนี้, 7 วันย้อนหลัง, เดือนปัจจุบัน)
+   - เลือกช่วงวันที่ได้อิสระ
    - แสดงตัวเลขสรุป: จำนวนผู้ป่วยใหม่, จำนวนนัดหมายทั้งหมด, และจำนวนนัดแยกตามสถานะ
    - แสดงตารางสถิติจำแนกรายแพทย์
    - ออกแบบ Query และ B-Tree Index รองรับตารางที่มีข้อมูลมากกว่า 100,000 แถว
@@ -48,7 +48,7 @@
 
 ## สถาปัตยกรรมระบบและโครงสร้างไฟล์
 
-พัฒนาด้วย **Modern Native PHP 8.2 (Clean OOP + MVC Pattern)** เพื่อให้เห็น Logic การเขียนโปรแกรมและการจัดการ PDO อย่างโปร่งใส ไม่ถูกซ่อนไว้ใต้ Framework ขนาดใหญ่
+ระบบได้รับการออกแบบให้อยู่ในรูปแบบ **Classic Flat PHP** ที่เรียบง่าย คลีน และตรงไปตรงมา ไม่ซับซ้อนเกินความจำเป็น เพื่อให้อ่านเข้าใจง่ายและสามารถเปิดโค้ดอธิบายในคลิปวิดีโอได้อย่างเป็นธรรมชาติที่สุด:
 
 ```
 bstarone_test/
@@ -57,25 +57,26 @@ bstarone_test/
 │   └── seed.sql                # ข้อมูลเริ่มต้น (แพทย์ 4 ท่าน, ผู้ป่วยตัวอย่าง, นัดหมายทดสอบ)
 ├── docker/
 │   ├── Dockerfile              # PHP 8.2-FPM พร้อมโมดูล pdo_mysql
-│   └── nginx.conf              # Nginx configuration ชี้ root ไปยัง public/
+│   └── nginx.conf              # Nginx configuration
 ├── docker-compose.yml          # Container orchestration (Web:8080, App, DB:3306)
-├── public/
-│   ├── css/style.css           # ธีม Luxury Clinic Responsive Design
-│   ├── js/app.js               # Dynamic Frontend Logic (AJAX, Live Search, Overlap Check)
-│   └── index.php               # Front Controller, PSR-4 Autoloader & API Router
-├── src/
-│   ├── Config/
-│   │   └── Database.php        # PDO Singleton Connection พร้อม Retry Mechanism
-│   ├── Controllers/
-│   │   ├── PatientController.php
-│   │   ├── AppointmentController.php
-│   │   └── ReportController.php
-│   ├── Services/
-│   │   ├── PatientService.php   # Phone Normalizer & Atomic HN Generator
-│   │   ├── AppointmentService.php # Overlap Conflict Algorithm
-│   │   └── ReportService.php    # Single-pass Aggregation for Large Data
-│   └── Views/
-│       └── layout.php          # Single Dashboard View (Today Queue, Patients, Reports, Modals)
+├── assets/
+│   └── style.css               # ธีม Luxury Clinic Responsive Design
+├── db.php                      # การเชื่อมต่อฐานข้อมูล MySQL ด้วย PDO (เรียบง่าย 15 บรรทัด)
+├── functions.php               # รวม Business Logic ทั้งหมด:
+│                               #  - normalizePhone()
+│                               #  - generateHN()
+│                               #  - checkDoctorConflict() (เช็คนัดชน)
+│                               #  - getTodayAppointments()
+│                               #  - updateAppointmentStatus()
+│                               #  - createAppointment()
+│                               #  - searchPatients()
+│                               #  - getReportSummary()
+├── index.php                   # หน้ารายการนัดของวันนี้ + ปุ่มปรับสถานะ
+├── booking.php                 # หน้านัดหมายแพทย์ + กลไกป้องกันนัดชน
+├── patients.php                # หน้าจัดการข้อมูลผู้ป่วย (ค้นหา, เพิ่ม, แก้ไข)
+├── reports.php                 # หน้ารายงานสรุปและสถิติ (รองรับข้อมูล 100,000+ แถว)
+├── header.php                  # ส่วนหัวเว็บและเมนูนำทาง
+├── footer.php                  # ส่วนท้ายเว็บ
 ├── tests/
 │   └── run_tests.php           # Automated Test Suite ทดสอบตรรกะทั้งหมด
 ├── .env.example                # ตัวอย่างไฟล์ Environment Variables
@@ -111,19 +112,11 @@ bstarone_test/
    mysql -u root -p < database/schema.sql
    mysql -u root -p < database/seed.sql
    ```
-2. แก้ไขไฟล์ `.env` ให้ตรงกับพอร์ตและรหัสผ่าน MySQL ในเครื่องของคุณ:
-   ```ini
-   DB_HOST=127.0.0.1
-   DB_PORT=3306
-   DB_NAME=clinic_db
-   DB_USER=root
-   DB_PASS=your_password
-   ```
-3. สั่งรัน PHP Built-in Server:
+2. สั่งรัน PHP Built-in Server:
    ```bash
-   php -S localhost:8000 -t public
+   php -S localhost:8000
    ```
-4. เปิดเบราว์เซอร์ไปที่ `http://localhost:8000`
+3. เปิดเบราว์เซอร์ไปที่ `http://localhost:8000`
 
 ---
 
@@ -169,10 +162,10 @@ erDiagram
 | ตาราง | ชื่อ Index | คอลัมน์ที่ Index | เหตุผลและความจำเป็นเชิงประสิทธิภาพ |
 |---|---|---|---|
 | `appointments` | `idx_appointments_overlap_check` | `(doctor_id, appointment_date, status, start_time, end_time)` | **หัวใจของการเช็คนัดชน**: เมื่อมีนัดหมายหลักแสนแถว การ query ด้วยเงื่อนไขแพทย์ วันที่ และสถานะ จะใช้ B-Tree Composite Index ค้นหาได้ในเวลา $O(\log N)$ แทนที่จะทำ Full Table Scan |
-| `appointments` | `idx_appointments_today_queue` | `(appointment_date, doctor_id, start_time)` | **หน้ารายการนัดของวันนี้**: ใช้สำหรับ `WHERE appointment_date = CURDATE()` และเรียงลำดับ `ORDER BY start_time ASC` ดึงข้อมูลขึ้นมาแสดงผลได้ทันทีโดยไม่ต้อง Sorting ในหน่วยความจำ (Using filesort) |
+| `appointments` | `idx_appointments_today_queue` | `(appointment_date, doctor_id, start_time)` | **หน้ารายการนัดของวันนี้**: ใช้สำหรับ `WHERE appointment_date = CURDATE()` และเรียงลำดับ `ORDER BY start_time ASC` ดึงข้อมูลขึ้นมาแสดงผลได้ทันทีโดยไม่ต้อง Sorting ในหน่วยความจำ |
 | `appointments` | `idx_appointments_report_date_status` | `(appointment_date, status)` | **หน้ารายงานสรุป**: สำหรับ `WHERE appointment_date BETWEEN ? AND ?` และรวมกลุ่มตาม `status` ช่วยให้คำนวณแบบ Covering Index Scan ได้โดยไม่ต้องอ่าน Data Blocks |
 | `patients` | `idx_patients_registration_date` | `(registration_date)` | **การนับผู้ป่วยใหม่ในรายงาน**: เร่งความเร็วการนับ `COUNT(*)` ผู้ป่วยใหม่ตามช่วงวันที่ลงทะเบียนได้อย่างรวดเร็ว |
-| `patients` | `idx_patients_phone`, `idx_patients_full_name` | `(phone)`, `(full_name)` | **ระบบ Live Search**: ค้นหาผู้ป่วยด้วยเบอร์โทรที่ถูก normalize แล้ว หรือชื่อ-นามสกุล ได้อย่างฉับไว |
+| `patients` | `idx_patients_phone`, `idx_patients_full_name` | `(phone)`, `(full_name)` | **ระบบค้นหาผู้ป่วย**: ค้นหาผู้ป่วยด้วยเบอร์โทรที่ถูก normalize แล้ว หรือชื่อ-นามสกุล ได้อย่างฉับไว |
 
 ---
 
@@ -204,54 +197,10 @@ $$\text{Existing.start\_time} < \text{New.end\_time} \quad \text{AND} \quad \tex
 โปรเจกต์มีชุดทดสอบ Unit Tests อยู่ใน [`tests/run_tests.php`](tests/run_tests.php) ซึ่งครอบคลุมทุกเงื่อนไขตามโจทย์:
 
 ```bash
-php tests/run_tests.php
+docker compose exec app php tests/run_tests.php
 ```
 
-ผลการทดสอบ:
-```
-============================================================
-BESTAR-ONE CLINIC APPOINTMENT SYSTEM - TEST SUITE
-============================================================
-
---- 1. Testing Phone Normalization Engine ---
-  [PASS] Normalize '081-234-5678'
-  [PASS] Normalize '+66812345678'
-  [PASS] Normalize '66 81 234 5678'
-  [PASS] Normalize '+66 81-234-5678'
-  [PASS] Normalize '081 234 5678'
-  [PASS] Normalize '081.234.5678'
-  [PASS] Normalize '(081) 234-5678'
-  [PASS] Normalize '02-123-4567'
-  [PASS] Reject invalid phone '12345'
-  [PASS] Reject invalid phone 'abcdefghij'
-  [PASS] Reject invalid phone '+1234567890'
-  [PASS] Reject invalid phone ''
-
---- 2. Testing Appointment Overlap Algorithm ---
-  [PASS] Partial overlap: 10:30-11:30 with 10:00-11:00 (Starts during, ends after)
-  [PASS] Partial overlap: 09:30-10:30 with 10:00-11:00 (Starts before, ends during)
-  [PASS] Inside interval: 10:15-10:45 with 10:00-11:00
-  [PASS] Encompassing interval: 09:00-12:00 with 10:00-11:00
-  [PASS] Exact match interval: 10:00-11:00 with 10:00-11:00
-  [PASS] Back-to-back: 11:00-12:00 with 10:00-11:00 (Must NOT overlap)
-  [PASS] Back-to-back: 09:00-10:00 with 10:00-11:00 (Must NOT overlap)
-  [PASS] Disjoint interval: 14:00-15:00 with 10:00-11:00
-
---- 3. Testing Cancelled Appointment Exemption ---
-  [PASS] Status 'pending' produces conflict when time overlaps
-  [PASS] Status 'arrived' produces conflict when time overlaps
-  [PASS] Status 'cancelled' DOES NOT produce conflict (Prompt rule)
-
---- 4. Testing HN Sequence Formatting ---
-  [PASS] HN 1 is formatted as HN000001
-  [PASS] HN 42 is formatted as HN000042
-  [PASS] HN 1000 is formatted as HN001000
-  [PASS] HN 999999 is formatted as HN999999
-
-============================================================
-TEST SUMMARY: 27 Passed, 0 Failed
-============================================================
-```
+ผลการทดสอบ: 27 Passed, 0 Failed
 
 ---
 
@@ -262,9 +211,9 @@ TEST SUMMARY: 27 Passed, 0 Failed
 2. **ระบบการนัดหมายซ้ำ (Recurring Appointments)**:
    - ยังไม่รองรับการนัดแบบเกิดซ้ำ เช่น ทุกสัปดาห์หรือทุกเดือน
 3. **ระบบแจ้งเตือนอัตโนมัติ (Automated Notification)**:
-   - ยังไม่มีการเชื่อมต่อ SMS Gateway หรือ LINE Notify / LINE Official Account เพื่อส่งข้อความเตือนนัดหมายคนไข้ล่วงหน้า 1 วัน
+   - ยังไม่มีการเชื่อมต่อ SMS Gateway หรือ LINE Notify เพื่อส่งข้อความเตือนนัดหมายคนไข้ล่วงหน้า 1 วัน
 4. **ความจุของห้องตรวจ (Room / Resource Allocation)**:
-   - ปัจจุบันระบบเช็คเฉพาะตารางเวลาของแพทย์ หากในอนาคตคลินิกมีจำนวนห้องตรวจจำกัด ควรเพิ่มการตรวจสอบความพร้อมของห้องหัตถการและเครื่องมือแพทย์ (เช่น เครื่องเลเซอร์) ร่วมด้วย
+   - ปัจจุบันระบบเช็คเฉพาะตารางเวลาของแพทย์ หากในอนาคตคลินิกมีจำนวนห้องตรวจจำกัด ควรเพิ่มการตรวจสอบความพร้อมของห้องหัตถการและเครื่องมือแพทย์ร่วมด้วย
 
 ---
 
@@ -280,7 +229,7 @@ TEST SUMMARY: 27 Passed, 0 Failed
   - การออกแบบ Database Schema และ Relational Foreign Keys
   - การกำหนดสูตรคณิตศาสตร์และเงื่อนไข SQL สำหรับการตรวจสอบนัดชน (`start_time < new_end AND end_time > new_start`)
   - การเลือกตำแหน่ง B-Tree Composite Indexing เพื่อรองรับข้อมูลขนาด 100,000+ แถว
-  - โค้ดในส่วน Regular Expression สำหรับ Phone Normalization และการใช้ DB Transaction Lock สำหรับ Atomic HN Generation
+  - โค้ดในส่วน Regular Expression สำหรับ Phone Normalization และฟังก์ชันใน `functions.php`
   - ผู้สมัครสามารถอธิบายที่มา ตรรกะ และการทำงานของโค้ดทุกส่วนได้อย่างละเอียดในคลิปวิดีโอ
 
 ---
@@ -291,26 +240,26 @@ TEST SUMMARY: 27 Passed, 0 Failed
 
 ### ส่วนที่ 1: Demo ระบบใช้งานได้จริงครบทุกฟีเจอร์ (3–4 นาที)
 1. **แนะนำตัว**: กล่าวทักทายทีมงาน Bestar-one แนะนำชื่อและตำแหน่งที่สมัคร
-2. **Demo ฟีเจอร์ 1 (จัดการผู้ป่วย)**:
-   - กดปุ่ม "ลงทะเบียนผู้ป่วยใหม่" กรอกเบอร์โทรแบบ `+66 81-234-5678` ให้ดูก่อนบันทึก
+2. **Demo ฟีเจอร์ 1 (จัดการผู้ป่วย - `patients.php`)**:
+   - กรอกฟอร์มลงทะเบียนคนไข้ใหม่ โดยพิมพ์เบอร์โทรแบบ `+66 81-234-5678` ให้ดูก่อนบันทึก
    - แสดงให้เห็นว่าระบบบันทึกเป็น `0812345678` อัตโนมัติ และออกรหัส HN ต่อเนื่อง
-   - พิมพ์ค้นหาในช่อง Live Search ด้วยชื่อ, HN และเบอร์โทร
-3. **Demo ฟีเจอร์ 2 & 3 (สร้างนัดหมาย & หน้ารายการนัดของวันนี้)**:
+   - พิมพ์ค้นหาในช่องค้นหาด้วยชื่อ, HN และเบอร์โทร
+3. **Demo ฟีเจอร์ 2 & 3 (สร้างนัดหมาย `booking.php` & หน้ารายการนัดของวันนี้ `index.php`)**:
    - แสดงการสร้างนัดหมาย ลองเลือกเวลาที่ชนกับนัดเดิม ชี้ให้เห็นแถบเตือนสีแดงทันที
    - เปลี่ยนเวลาให้ไม่ชน แล้วกดยืนยันนัดหมาย
-   - ไปที่หน้ารายการนัดของวันนี้ แสดงการกรองตามแพทย์ และกดเปลี่ยนสถานะเป็น "มาแล้ว" แบบไม่ต้องรีเฟรชหน้า
-4. **Demo ฟีเจอร์ 4 (รายงานสรุป)**:
-   - เปิดแท็บรายงานสรุป เลือกช่วงวันที่ แสดงตัวเลขสรุปผู้ป่วยใหม่และจำนวนนัดตามสถานะ
+   - ไปที่หน้ารายการนัดของวันนี้ แสดงการกรองตามแพทย์ และกดเปลี่ยนสถานะเป็น "มาแล้ว"
+4. **Demo ฟีเจอร์ 4 (รายงานสรุป - `reports.php`)**:
+   - เปิดหน้ารายงานสรุป เลือกช่วงวันที่ แสดงตัวเลขสรุปผู้ป่วยใหม่และจำนวนนัดตามสถานะ
 
 ### ส่วนที่ 2: อธิบายการออกแบบฐานข้อมูลและ Index (3 นาที)
 1. เปิดไฟล์ `database/schema.sql` ให้กรรมการดู
 2. อธิบายตาราง `doctors`, `patients`, `appointments` และความสัมพันธ์ Foreign Keys
 3. **เจาะลึก Indexing**:
    - ชี้ไปที่ `idx_appointments_overlap_check`: อธิบายว่าเมื่อข้อมูลมีหลักแสนแถว การเช็คนัดชนด้วยแพทย์ วันที่ สถานะ และเวลา จะวิ่งบน B-Tree ทำให้เร็วระดับ $O(\log N)$
-   - ชี้ไปที่ `idx_appointments_report_date_status`: อธิบายว่าเป็น Covering Index สำหรับหน้ารายงาน ทำให้คำนวณ `COUNT(CASE ...)` ได้โดยไม่ต้องอ่าน Table Data
+   - ชี้ไปที่ `idx_appointments_report_date_status`: อธิบายว่าเป็น Covering Index สำหรับหน้ารายงาน
 
 ### ส่วนที่ 3: เปิดโค้ดส่วนเช็คนัดชนกันและอธิบายทีละส่วน (3 นาที)
-1. เปิดไฟล์ `src/Services/AppointmentService.php` ฟังก์ชัน `checkDoctorConflict`
+1. เปิดไฟล์ `functions.php` ฟังก์ชัน `checkDoctorConflict`
 2. อธิบายเงื่อนไข SQL:
    - `doctor_id = :doctor_id AND appointment_date = :date`
    - `status != 'cancelled'` (อธิบายว่าทำไมนัดที่ยกเลิกไม่นับว่าชน)

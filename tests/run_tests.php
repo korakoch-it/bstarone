@@ -1,7 +1,7 @@
 <?php
 
 /**
- * BESTAR-ONE CLINIC - AUTOMATED TEST SUITE
+ * BESTAR-ONE CLINIC - AUTOMATED TEST SUITE (FLAT PHP)
  * Run via CLI: php tests/run_tests.php
  * Covers:
  * 1. Phone number normalization (all test formats from prompt)
@@ -12,18 +12,7 @@
 
 declare(strict_types=1);
 
-// PSR-4 Autoloader
-spl_autoload_register(function (string $class) {
-    $prefix = 'App\\';
-    $baseDir = __DIR__ . '/../src/';
-    $len = strlen($prefix);
-    if (strncmp($prefix, $class, $len) !== 0) return;
-    $relativeClass = substr($class, $len);
-    $file = $baseDir . str_replace('\\', '/', $relativeClass) . '.php';
-    if (file_exists($file)) require_once $file;
-});
-
-use App\Services\PatientService;
+require_once __DIR__ . '/../functions.php';
 
 class TestRunner
 {
@@ -76,7 +65,7 @@ $phoneCases = [
 
 foreach ($phoneCases as $input => $expected) {
     try {
-        $actual = PatientService::normalizePhone($input);
+        $actual = normalizePhone($input);
         $runner->assert($actual === $expected, "Normalize '{$input}'", "Expected '{$expected}', got '{$actual}'");
     } catch (\Throwable $e) {
         $runner->assert(false, "Normalize '{$input}'", "Exception: " . $e->getMessage());
@@ -87,7 +76,7 @@ foreach ($phoneCases as $input => $expected) {
 $invalidPhones = ['12345', 'abcdefghij', '+1234567890', ''];
 foreach ($invalidPhones as $invalid) {
     try {
-        PatientService::normalizePhone($invalid);
+        normalizePhone($invalid);
         $runner->assert(false, "Reject invalid phone '{$invalid}'", "Expected exception but none thrown");
     } catch (\InvalidArgumentException $e) {
         $runner->assert(true, "Reject invalid phone '{$invalid}'");
@@ -156,7 +145,6 @@ echo "\n--- 3. Testing Cancelled Appointment Exemption ---\n";
 
 function checkConflictWithStatus(string $status, string $newStart, string $newEnd, string $existStart, string $existEnd): bool
 {
-    // If appointment is cancelled, it never counts as conflict
     if ($status === 'cancelled') {
         return false;
     }
