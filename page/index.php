@@ -23,12 +23,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 }
 
 // ตัวกรอง
-$selectedDoctor = !empty($_GET['doctor_id']) ? (int)$_GET['doctor_id'] : null;
-$selectedDate = !empty($_GET['date']) ? trim($_GET['date']) : date('Y-m-d');
+$selectedDoctor = !empty($_GET['doctor_id']) ? (int)$_GET['doctor_id'] : (!empty($_POST['doctor_id']) ? (int)$_POST['doctor_id'] : null);
+$selectedDate = !empty($_GET['date']) ? trim($_GET['date']) : (!empty($_POST['date']) ? trim($_POST['date']) : date('Y-m-d'));
+$page = max(1, (int)($_GET['p'] ?? ($_POST['p'] ?? 1)));
+$perPage = 5;
 
-// ดึงข้อมูลผ่าน OOP Class
+// ดึงข้อมูลผ่าน OOP Class แบบแบ่งหน้า
 $doctors = $appointmentApi->getDoctors();
-$appointments = $appointmentApi->getToday($selectedDoctor, $selectedDate);
+$paginated = $appointmentApi->getTodayPaginated($selectedDoctor, $selectedDate, $page, $perPage);
+$appointments = $paginated['data'];
+$total = $paginated['total'];
+$totalPages = $paginated['total_pages'];
 
 $pageTitle = 'รายการนัดหมายประจำวัน';
 $activePage = 'today';
@@ -42,11 +47,11 @@ require_once __DIR__ . '/header.php';
       <h2 class="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-2">
         <span>📅</span> <span>รายการนัดหมายประจำวัน</span>
         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-sky-50 text-sky-700 border border-sky-200">
-          <?= count($appointments) ?> รายการ
+          <?= number_format($total) ?> รายการ
         </span>
       </h2>
       <p class="text-xs sm:text-sm text-slate-400 mt-1">
-        แสดงรายการนัดหมายเรียงตามเวลา สามารถกรองตามแพทย์และปรับเปลี่ยนสถานะได้
+        แสดงรายการนัดหมายเรียงตามเวลา สามารถกรองตามแพทย์และปรับเปลี่ยนสถานะได้ (หน้า <?= $page ?>/<?= $totalPages ?>)
       </p>
     </div>
 
@@ -148,6 +153,9 @@ require_once __DIR__ . '/header.php';
                 <form method="POST" action="/page/index.php" class="m-0">
                   <input type="hidden" name="action" value="update_status">
                   <input type="hidden" name="appointment_id" value="<?= $item['id'] ?>">
+                  <input type="hidden" name="p" value="<?= $page ?>">
+                  <input type="hidden" name="doctor_id" value="<?= htmlspecialchars((string)($selectedDoctor ?? '')) ?>">
+                  <input type="hidden" name="date" value="<?= htmlspecialchars($selectedDate) ?>">
                   <select name="status" class="px-2 py-1 text-xs border border-slate-300 rounded-md bg-white font-medium focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer" onchange="this.form.submit()">
                     <option value="pending" <?= $item['status'] === 'pending' ? 'selected' : '' ?>>⏳ รอ</option>
                     <option value="arrived" <?= $item['status'] === 'arrived' ? 'selected' : '' ?>>✅ มาแล้ว</option>
@@ -161,6 +169,70 @@ require_once __DIR__ . '/header.php';
       </tbody>
     </table>
   </div>
+
+  <!-- Pagination Controls -->
+  <?php if ($totalPages > 1): ?>
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 mt-4 border-t border-slate-100">
+      <div class="text-xs text-slate-500">
+        แสดงรายการที่ <span class="font-semibold text-slate-700"><?= $total > 0 ? (($page - 1) * $perPage + 1) : 0 ?></span> ถึง 
+        <span class="font-semibold text-slate-700"><?= min($page * $perPage, $total) ?></span> 
+        จากทั้งหมด <span class="font-semibold text-slate-700"><?= number_format($total) ?></span> รายการ
+      </div>
+      
+      <nav class="inline-flex items-center -space-x-px rounded-lg shadow-sm" aria-label="Pagination">
+        <!-- ปุ่มก่อนหน้า -->
+        <?php if ($page > 1): ?>
+          <a href="?<?= http_build_query(array_merge($_GET, ['p' => $page - 1])) ?>" class="relative inline-flex items-center px-2.5 py-1.5 rounded-l-lg border border-slate-200 bg-white text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+            ‹ ก่อนหน้า
+          </a>
+        <?php else: ?>
+          <span class="relative inline-flex items-center px-2.5 py-1.5 rounded-l-lg border border-slate-200 bg-slate-50 text-xs font-medium text-slate-300 cursor-not-allowed">
+            ‹ ก่อนหน้า
+          </span>
+        <?php endif; ?>
+
+        <!-- เลขหน้า -->
+        <?php
+        $startPage = max(1, $page - 2);
+        $endPage = min($totalPages, $page + 2);
+        if ($startPage > 1) {
+            echo '<a href="?' . http_build_query(array_merge($_GET, ['p' => 1])) . '" class="relative inline-flex items-center px-3 py-1.5 border border-slate-200 bg-white text-xs font-medium text-slate-600 hover:bg-slate-50">1</a>';
+            if ($startPage > 2) {
+                echo '<span class="relative inline-flex items-center px-2 py-1.5 border border-slate-200 bg-slate-50 text-xs text-slate-400">...</span>';
+            }
+        }
+        for ($i = $startPage; $i <= $endPage; $i++):
+            if ($i === $page): ?>
+                <span class="relative z-10 inline-flex items-center px-3 py-1.5 border border-emerald-800 bg-emerald-800 text-xs font-bold text-white shadow-sm">
+                  <?= $i ?>
+                </span>
+            <?php else: ?>
+                <a href="?<?= http_build_query(array_merge($_GET, ['p' => $i])) ?>" class="relative inline-flex items-center px-3 py-1.5 border border-slate-200 bg-white text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+                  <?= $i ?>
+                </a>
+            <?php endif;
+        endfor;
+        if ($endPage < $totalPages) {
+            if ($endPage < $totalPages - 1) {
+                echo '<span class="relative inline-flex items-center px-2 py-1.5 border border-slate-200 bg-slate-50 text-xs text-slate-400">...</span>';
+            }
+            echo '<a href="?' . http_build_query(array_merge($_GET, ['p' => $totalPages])) . '" class="relative inline-flex items-center px-3 py-1.5 border border-slate-200 bg-white text-xs font-medium text-slate-600 hover:bg-slate-50">' . $totalPages . '</a>';
+        }
+        ?>
+
+        <!-- ปุ่มถัดไป -->
+        <?php if ($page < $totalPages): ?>
+          <a href="?<?= http_build_query(array_merge($_GET, ['p' => $page + 1])) ?>" class="relative inline-flex items-center px-2.5 py-1.5 rounded-r-lg border border-slate-200 bg-white text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+            ถัดไป ›
+          </a>
+        <?php else: ?>
+          <span class="relative inline-flex items-center px-2.5 py-1.5 rounded-r-lg border border-slate-200 bg-slate-50 text-xs font-medium text-slate-300 cursor-not-allowed">
+            ถัดไป ›
+          </span>
+        <?php endif; ?>
+      </nav>
+    </div>
+  <?php endif; ?>
 </div>
 
 <?php require_once __DIR__ . '/footer.php'; ?>

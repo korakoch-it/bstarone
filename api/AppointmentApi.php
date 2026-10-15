@@ -96,6 +96,78 @@ class AppointmentApi
     }
 
     /**
+     * ดึงรายการนัดหมายของวันนี้แบบแบ่งหน้า (Pagination)
+     * @return array [
+     *   'data' => array,
+     *   'total' => int,
+     *   'page' => int,
+     *   'per_page' => int,
+     *   'total_pages' => int,
+     * ]
+     */
+    public function getTodayPaginated(?int $doctorId = null, ?string $targetDate = null, int $page = 1, int $perPage = 10): array
+    {
+        $page = max(1, $page);
+        $perPage = max(1, $perPage);
+        $offset = ($page - 1) * $perPage;
+
+        $date = $targetDate ?: date('Y-m-d');
+
+        // 1. นับจำนวนทั้งหมด
+        $countSql = "SELECT COUNT(*) FROM appointments WHERE appointment_date = :appointment_date";
+        if ($doctorId !== null && $doctorId > 0) {
+            $countSql .= " AND doctor_id = :doctor_id";
+        }
+        $countStmt = $this->pdo->prepare($countSql);
+        $countStmt->bindValue(':appointment_date', $date, PDO::PARAM_STR);
+        if ($doctorId !== null && $doctorId > 0) {
+            $countStmt->bindValue(':doctor_id', $doctorId, PDO::PARAM_INT);
+        }
+        $countStmt->execute();
+        $total = (int)$countStmt->fetchColumn();
+
+        // 2. ดึงข้อมูลแบ่งหน้า
+        $sql = "
+            SELECT a.id, a.appointment_date, a.start_time, a.end_time, a.status, a.note,
+                   p.hn AS patient_hn, p.full_name AS patient_name, p.phone AS patient_phone,
+                   d.name AS doctor_name, d.specialty AS doctor_specialty
+            FROM appointments a
+            JOIN patients p ON a.patient_id = p.id
+            JOIN doctors d ON a.doctor_id = d.id
+            WHERE a.appointment_date = :appointment_date
+        ";
+
+        if ($doctorId !== null && $doctorId > 0) {
+            $sql .= " AND a.doctor_id = :doctor_id";
+        }
+
+        $sql .= " ORDER BY a.start_time ASC, a.id ASC LIMIT :limit OFFSET :offset";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindValue(':appointment_date', $date, PDO::PARAM_STR);
+        if ($doctorId !== null && $doctorId > 0) {
+            $stmt->bindValue(':doctor_id', $doctorId, PDO::PARAM_INT);
+        }
+        $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        $data = $stmt->fetchAll();
+
+        $totalPages = (int)ceil($total / $perPage);
+        if ($totalPages < 1) {
+            $totalPages = 1;
+        }
+
+        return [
+            'data' => $data,
+            'total' => $total,
+            'page' => $page,
+            'per_page' => $perPage,
+            'total_pages' => $totalPages,
+        ];
+    }
+
+    /**
      * เปลี่ยนสถานะนัดหมาย (รอ / มาแล้ว / ยกเลิก)
      */
     public function updateStatus(int $id, string $status): bool

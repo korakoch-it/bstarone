@@ -55,26 +55,25 @@ bstarone_test/
 ├── config/
 │   └── database.php            # การเชื่อมต่อฐานข้อมูล MySQL ด้วย PDO
 ├── api/                        # รวม OOP Classes แยกตามฟังก์ชันของแต่ละ Page:
-│   ├── PatientApi.php          # OOP Class จัดการผู้ป่วย, สร้าง HN, normalize เบอร์โทร
-│   ├── AppointmentApi.php      # OOP Class นัดหมายแพทย์, เช็คนัดชน, เปลี่ยนสถานะ
+│   ├── PatientApi.php          # OOP Class จัดการผู้ป่วย, สร้าง HN, normalize เบอร์โทร, searchPaginated
+│   ├── AppointmentApi.php      # OOP Class นัดหมายแพทย์, เช็คนัดชน, เปลี่ยนสถานะ, getTodayPaginated
 │   └── ReportApi.php           # OOP Class รายงานสรุปและสถิติ (รองรับข้อมูล 100,000+ แถว)
-├── page/                       # รวมไฟล์หน้าเว็บ Frontend (Tailwind CSS v3 Play CDN):
-│   ├── index.php               # หน้ารายการนัดของวันนี้ (Tailwind UI + AppointmentApi)
+├── page/                       # รวมไฟล์หน้าเว็บ Frontend (Tailwind CSS v3 Play CDN + Pagination):
+│   ├── index.php               # หน้ารายการนัดของวันนี้ (Tailwind UI + AppointmentApi + Pagination)
 │   ├── booking.php             # หน้านัดหมายแพทย์ (Tailwind UI + AppointmentApi, PatientApi)
-│   ├── patients.php            # หน้าจัดการข้อมูลผู้ป่วย (Tailwind UI + PatientApi)
+│   ├── patients.php            # หน้าจัดการข้อมูลผู้ป่วย (Tailwind UI + PatientApi + Pagination)
 │   ├── reports.php             # หน้ารายงานสรุปและสถิติ (Tailwind UI + ReportApi)
 │   ├── header.php              # ส่วนหัวเว็บ เมนูนำทาง และโหลด Tailwind CSS CDN
 │   └── footer.php              # ส่วนท้ายเว็บ
 ├── database/
 │   ├── schema.sql              # DDL ตาราง patients, doctors, appointments พร้อม Indexes
 │   └── seed.sql                # ข้อมูลเริ่มต้น (แพทย์ 4 ท่าน, ผู้ป่วยตัวอย่าง, นัดหมายทดสอบ)
-├── docker/
-│   ├── Dockerfile              # PHP 8.2-FPM พร้อมโมดูล pdo_mysql
-│   └── nginx.conf              # Nginx configuration
+├── Dockerfile                  # PHP 8.2-FPM พร้อมโมดูล pdo_mysql
+├── nginx.conf                  # Nginx configuration
 ├── docker-compose.yml          # Container orchestration (Web:8080, App, DB:3306)
 ├── index.php                   # Entrypoint Redirect ไปยัง /page/index.php
 ├── tests/
-│   └── run_tests.php           # Automated Test Suite ทดสอบ OOP API ทั้งหมด
+│   └── run_tests.php           # Automated Test Suite ทดสอบ OOP API & Pagination (33/33 ผ่าน)
 ├── .env.example                # ตัวอย่างไฟล์ Environment Variables
 └── README.md
 ```

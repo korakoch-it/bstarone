@@ -36,9 +36,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// ค้นหา
+// ค้นหาแบบ Pagination
 $keyword = trim($_GET['search'] ?? '');
-$patients = $patientApi->search($keyword);
+$page = max(1, (int)($_GET['p'] ?? 1));
+$perPage = 5;
+$paginated = $patientApi->searchPaginated($keyword, $page, $perPage);
+$patients = $paginated['data'];
+$total = $paginated['total'];
+$totalPages = $paginated['total_pages'];
 
 // ตรวจสอบว่ากำลังกดแก้ไขใครอยู่หรือไม่
 $editPatient = null;
@@ -137,10 +142,10 @@ require_once __DIR__ . '/header.php';
         <h2 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2">
           <span>👥</span> <span>รายชื่อผู้ป่วยในระบบ</span>
           <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-sky-50 text-sky-700 border border-sky-200">
-            <?= count($patients) ?> คน
+            <?= number_format($total) ?> คน
           </span>
         </h2>
-        <p class="text-xs text-slate-400 mt-0.5">ค้นหาจากชื่อ, HN หรือเบอร์โทรศัพท์</p>
+        <p class="text-xs text-slate-400 mt-0.5">ค้นหาจากชื่อ, HN หรือเบอร์โทรศัพท์ (หน้า <?= $page ?>/<?= $totalPages ?>)</p>
       </div>
 
       <!-- Search Form -->
@@ -197,7 +202,7 @@ require_once __DIR__ . '/header.php';
                   <?= htmlspecialchars($p['registration_date']) ?>
                 </td>
                 <td class="px-4 py-3 text-center whitespace-nowrap">
-                  <a href="/page/patients.php?edit_id=<?= $p['id'] ?>" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-all">
+                  <a href="/page/patients.php?edit_id=<?= $p['id'] ?>&p=<?= $page ?><?= $keyword ? '&search=' . urlencode($keyword) : '' ?>" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-all">
                     ✏️ <span>แก้ไข</span>
                   </a>
                 </td>
@@ -207,6 +212,70 @@ require_once __DIR__ . '/header.php';
         </tbody>
       </table>
     </div>
+
+    <!-- Pagination Controls -->
+    <?php if ($totalPages > 1): ?>
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 mt-4 border-t border-slate-100">
+        <div class="text-xs text-slate-500">
+          แสดงรายการที่ <span class="font-semibold text-slate-700"><?= $total > 0 ? (($page - 1) * $perPage + 1) : 0 ?></span> ถึง 
+          <span class="font-semibold text-slate-700"><?= min($page * $perPage, $total) ?></span> 
+          จากทั้งหมด <span class="font-semibold text-slate-700"><?= number_format($total) ?></span> รายการ
+        </div>
+        
+        <nav class="inline-flex items-center -space-x-px rounded-lg shadow-sm" aria-label="Pagination">
+          <!-- ปุ่มก่อนหน้า -->
+          <?php if ($page > 1): ?>
+            <a href="?<?= http_build_query(array_merge($_GET, ['p' => $page - 1])) ?>" class="relative inline-flex items-center px-2.5 py-1.5 rounded-l-lg border border-slate-200 bg-white text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+              ‹ ก่อนหน้า
+            </a>
+          <?php else: ?>
+            <span class="relative inline-flex items-center px-2.5 py-1.5 rounded-l-lg border border-slate-200 bg-slate-50 text-xs font-medium text-slate-300 cursor-not-allowed">
+              ‹ ก่อนหน้า
+            </span>
+          <?php endif; ?>
+
+          <!-- เลขหน้า -->
+          <?php
+          $startPage = max(1, $page - 2);
+          $endPage = min($totalPages, $page + 2);
+          if ($startPage > 1) {
+              echo '<a href="?' . http_build_query(array_merge($_GET, ['p' => 1])) . '" class="relative inline-flex items-center px-3 py-1.5 border border-slate-200 bg-white text-xs font-medium text-slate-600 hover:bg-slate-50">1</a>';
+              if ($startPage > 2) {
+                  echo '<span class="relative inline-flex items-center px-2 py-1.5 border border-slate-200 bg-slate-50 text-xs text-slate-400">...</span>';
+              }
+          }
+          for ($i = $startPage; $i <= $endPage; $i++):
+              if ($i === $page): ?>
+                  <span class="relative z-10 inline-flex items-center px-3 py-1.5 border border-emerald-800 bg-emerald-800 text-xs font-bold text-white shadow-sm">
+                    <?= $i ?>
+                  </span>
+              <?php else: ?>
+                  <a href="?<?= http_build_query(array_merge($_GET, ['p' => $i])) ?>" class="relative inline-flex items-center px-3 py-1.5 border border-slate-200 bg-white text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+                    <?= $i ?>
+                  </a>
+              <?php endif;
+          endfor;
+          if ($endPage < $totalPages) {
+              if ($endPage < $totalPages - 1) {
+                  echo '<span class="relative inline-flex items-center px-2 py-1.5 border border-slate-200 bg-slate-50 text-xs text-slate-400">...</span>';
+              }
+              echo '<a href="?' . http_build_query(array_merge($_GET, ['p' => $totalPages])) . '" class="relative inline-flex items-center px-3 py-1.5 border border-slate-200 bg-white text-xs font-medium text-slate-600 hover:bg-slate-50">' . $totalPages . '</a>';
+          }
+          ?>
+
+          <!-- ปุ่มถัดไป -->
+          <?php if ($page < $totalPages): ?>
+            <a href="?<?= http_build_query(array_merge($_GET, ['p' => $page + 1])) ?>" class="relative inline-flex items-center px-2.5 py-1.5 rounded-r-lg border border-slate-200 bg-white text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+              ถัดไป ›
+            </a>
+          <?php else: ?>
+            <span class="relative inline-flex items-center px-2.5 py-1.5 rounded-r-lg border border-slate-200 bg-slate-50 text-xs font-medium text-slate-300 cursor-not-allowed">
+              ถัดไป ›
+            </span>
+          <?php endif; ?>
+        </nav>
+      </div>
+    <?php endif; ?>
   </div>
 
 </div>

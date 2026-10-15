@@ -148,6 +148,85 @@ class PatientApi
         return $stmt->fetchAll();
     }
 
+    /**
+     * ค้นหาผู้ป่วยแบบแบ่งหน้า (Pagination)
+     * @return array [
+     *   'data' => array,
+     *   'total' => int,
+     *   'page' => int,
+     *   'per_page' => int,
+     *   'total_pages' => int,
+     * ]
+     */
+    public function searchPaginated(string $keyword = '', int $page = 1, int $perPage = 10): array
+    {
+        $page = max(1, $page);
+        $perPage = max(1, $perPage);
+        $offset = ($page - 1) * $perPage;
+
+        $trimmed = trim($keyword);
+        $digits = preg_replace('/\D/', '', $trimmed);
+        if (str_starts_with($digits, '66')) {
+            $digits = '0' . substr($digits, 2);
+        }
+
+        if (empty($trimmed)) {
+            $countStmt = $this->pdo->query("SELECT COUNT(*) FROM patients");
+            $total = (int)$countStmt->fetchColumn();
+
+            $stmt = $this->pdo->prepare("SELECT * FROM patients ORDER BY id DESC LIMIT :limit OFFSET :offset");
+            $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+            $stmt->execute();
+            $data = $stmt->fetchAll();
+        } else {
+            $whereClause = "
+                WHERE hn LIKE :hn_kw
+                   OR full_name LIKE :name_kw
+                   " . (!empty($digits) ? "OR phone LIKE :phone_kw" : "") . "
+            ";
+
+            $countStmt = $this->pdo->prepare("SELECT COUNT(*) FROM patients {$whereClause}");
+            $countStmt->bindValue(':hn_kw', '%' . $trimmed . '%', PDO::PARAM_STR);
+            $countStmt->bindValue(':name_kw', '%' . $trimmed . '%', PDO::PARAM_STR);
+            if (!empty($digits)) {
+                $countStmt->bindValue(':phone_kw', '%' . $digits . '%', PDO::PARAM_STR);
+            }
+            $countStmt->execute();
+            $total = (int)$countStmt->fetchColumn();
+
+            $sql = "
+                SELECT * FROM patients
+                {$whereClause}
+                ORDER BY id DESC
+                LIMIT :limit OFFSET :offset
+            ";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindValue(':hn_kw', '%' . $trimmed . '%', PDO::PARAM_STR);
+            $stmt->bindValue(':name_kw', '%' . $trimmed . '%', PDO::PARAM_STR);
+            if (!empty($digits)) {
+                $stmt->bindValue(':phone_kw', '%' . $digits . '%', PDO::PARAM_STR);
+            }
+            $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+            $stmt->execute();
+            $data = $stmt->fetchAll();
+        }
+
+        $totalPages = (int)ceil($total / $perPage);
+        if ($totalPages < 1) {
+            $totalPages = 1;
+        }
+
+        return [
+            'data' => $data,
+            'total' => $total,
+            'page' => $page,
+            'per_page' => $perPage,
+            'total_pages' => $totalPages,
+        ];
+    }
+
     public function getById(int $id): ?array
     {
         $stmt = $this->pdo->prepare("SELECT * FROM patients WHERE id = :id");

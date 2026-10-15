@@ -195,4 +195,43 @@ $runner->assert(formatHN(42) === 'HN000042', "HN 42 is formatted as HN000042");
 $runner->assert(formatHN(1000) === 'HN001000', "HN 1000 is formatted as HN001000");
 $runner->assert(formatHN(999999) === 'HN999999', "HN 999999 is formatted as HN999999");
 
+// =====================================================================
+// 5. Pagination Logic Verification
+// =====================================================================
+echo "\n--- 5. Testing Pagination Math & Structure ---\n";
+
+function calcPagination(int $total, int $page, int $perPage): array
+{
+    $page = max(1, $page);
+    $perPage = max(1, $perPage);
+    $totalPages = (int)ceil($total / $perPage);
+    if ($totalPages < 1) {
+        $totalPages = 1;
+    }
+    $offset = ($page - 1) * $perPage;
+    return [
+        'page' => $page,
+        'per_page' => $perPage,
+        'total' => $total,
+        'total_pages' => $totalPages,
+        'offset' => $offset,
+    ];
+}
+
+$p1 = calcPagination(25, 1, 10);
+$runner->assert($p1['total_pages'] === 3, "25 items with 10/page produces 3 pages");
+$runner->assert($p1['offset'] === 0, "Page 1 has offset 0");
+
+$p2 = calcPagination(25, 2, 10);
+$runner->assert($p2['offset'] === 10, "Page 2 has offset 10");
+
+$p3 = calcPagination(25, 3, 10);
+$runner->assert($p3['offset'] === 20, "Page 3 has offset 20");
+
+$pZero = calcPagination(0, 1, 10);
+$runner->assert($pZero['total_pages'] === 1, "0 items still produces at least 1 page");
+
+$pNeg = calcPagination(15, -5, 10);
+$runner->assert($pNeg['page'] === 1, "Negative page defaults to 1");
+
 $runner->summary();
