@@ -4,13 +4,7 @@
 // Flat Design Corporativo | Bootstrap 5.3.3 | Powered by Vue 2 (CDN)
 // =====================================================================
 
-require_once __DIR__ . '/../api/booking/class.booking.php';
-
-$booking = new ClassBooking();
-$timeSlots = $booking->getTimeSlots();
-$clinicSettings = $booking->getClinicSettings();
-
-$pageTitle = 'รายการนัดหมายประจำวัน';
+$pageTitle = 'การนัดหมาย';
 $activePage = 'today';
 require_once __DIR__ . '/header.php';
 ?>
@@ -82,12 +76,12 @@ require_once __DIR__ . '/header.php';
         <table class="table table-hover align-middle mb-0">
           <thead>
             <tr>
-              <th class="py-3" style="width: 170px;">ช่วงเวลานัด</th>
+              <th class="ps-4 py-3" style="width: 170px;">ช่วงเวลานัด</th>
               <th class="py-3" style="width: 120px;">HN</th>
               <th class="py-3">ผู้ป่วย</th>
               <th class="py-3">แพทย์</th>
               <th class="py-3">หมายเหตุ</th>
-              <th class="pe-4 py-3 text-center" style="width: 150px;">สถานะ</th>
+              <th class="pe-4 py-3 text-end" style="width: 100px;">จัดการ</th>
             </tr>
           </thead>
           <tbody>
@@ -98,25 +92,34 @@ require_once __DIR__ . '/header.php';
               </td>
             </tr>
             <tr v-for="a in results" :key="a.id">
-              <td class="fw-semibold">
+              <td class="ps-4 fw-semibold">
                 {{ a.start_time.substring(0, 5) }} - {{ a.end_time.substring(0, 5) }}
               </td>
               <td class="fw-semibold">{{ a.patient_hn }}</td>
               <td>{{ a.patient_name }}</td>
               <td>{{ a.doctor_name }}</td>
               <td class="text-muted small">{{ a.note || '-' }}</td>
-              <td class="pe-4 text-center">
-                <select 
-                  class="form-select form-select-sm" 
-                  :class="getStatusClass(a.status)"
-                  v-model="a.status" 
-                  @change="updateStatus(a)"
-                  style="font-size: 0.8125rem;"
-                >
-                  <option value="pending">รอรับบริการ</option>
-                  <option value="arrived">มาถึงแล้ว</option>
-                  <option value="cancelled">ยกเลิก</option>
-                </select>
+              <td class="pe-4 text-end">
+                <div class="d-inline-flex align-items-center gap-1.5">
+                  <button 
+                    type="button" 
+                    class="btn btn-sm btn-outline-primary p-1.5 d-inline-flex align-items-center justify-content-center"
+                    style="width: 30px; height: 30px;"
+                    title="แก้ไขการนัดหมาย"
+                    @click="editAppointment(a)"
+                  >
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button 
+                    type="button" 
+                    class="btn btn-sm btn-outline-danger p-1.5 d-inline-flex align-items-center justify-content-center"
+                    style="width: 30px; height: 30px;"
+                    title="ลบการนัดหมาย"
+                    @click="confirmDeleteAppointment(a)"
+                  >
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -163,19 +166,15 @@ require_once __DIR__ . '/header.php';
     </div>
   </div>
 
-  <!-- Modal สร้างนัดหมายแพทย์ (Vue 2 + Bootstrap 5) -->
+  <!-- Modal สร้าง/แก้ไขนัดหมายแพทย์ (Vue 2 + Bootstrap 5) -->
   <div class="modal fade" id="bookingModal" ref="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" style="max-width: 600px;">
       <div class="modal-content" style="border-radius: var(--radius-sm); border: 1px solid var(--corp-border);">
         <div class="modal-header py-3 px-4" style="background-color: var(--corp-white); border-bottom: 1px solid var(--corp-border-light);">
           <div class="d-flex align-items-center gap-2.5">
-            <div class="d-flex align-items-center justify-content-center text-white" style="background-color: var(--corp-primary); width: 32px; height: 32px; border-radius: var(--radius-sm);">
-              <i class="bi bi-calendar-plus"></i>
-            </div>
-            <div>
-              <h2 class="h6 fw-bold mb-0 text-dark" id="bookingModalLabel">สร้างนัดหมายแพทย์</h2>
-              <div class="text-muted small" style="font-size: 0.75rem;">Medical Appointment Scheduler</div>
-            </div>
+            <h2 class="h6 fw-bold mb-0 text-dark" id="bookingModalLabel">
+              {{ isEditMode ? 'แก้ไขการนัดหมายแพทย์' : 'สร้างนัดหมายแพทย์' }}
+            </h2>
           </div>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
@@ -190,97 +189,108 @@ require_once __DIR__ . '/header.php';
             <div>
               <label class="form-label small fw-semibold text-dark mb-1 d-flex justify-content-between align-items-center">
                 <span>ผู้ป่วย <span class="text-danger">*</span></span>
-                <a href="/page/patients.php" class="text-decoration-none small text-primary fw-medium" target="_blank">
-                  <i class="bi bi-person-plus me-1"></i>ลงทะเบียนคนไข้ใหม่
-                </a>
               </label>
-              <div class="input-group">
-                <span class="input-group-text"><i class="bi bi-person"></i></span>
-                <select v-model="bookingForm.patient_id" class="form-select" required>
-                  <option value="">กรุณาเลือก</option>
-                  <option v-for="item in dropdownPatients" :key="item.value" :value="item.value">
-                    {{ item.label }}
-                  </option>
-                </select>
-              </div>
+              <select v-model="bookingForm.patient_id" class="form-select" required :disabled="isEditMode">
+                <option value="">กรุณาเลือก</option>
+                <option v-for="item in dropdownPatients" :key="item.value" :value="item.value">
+                  {{ item.label }}
+                </option>
+              </select>
             </div>
 
             <div>
               <label class="form-label small fw-semibold text-dark mb-1">แพทย์ผู้ตรวจ <span class="text-danger">*</span></label>
-              <div class="input-group">
-                <span class="input-group-text"><i class="bi bi-hospital"></i></span>
-                <select v-model="bookingForm.doctor_id" class="form-select" required>
-                  <option value="">กรุณาเลือก</option>
-                  <option v-for="item in dropdownDoctors" :key="item.value" :value="item.value">
-                    {{ item.label }}
-                  </option>
-                </select>
-              </div>
+              <select v-model="bookingForm.doctor_id" class="form-select" required>
+                <option value="">กรุณาเลือก</option>
+                <option v-for="item in dropdownDoctors" :key="item.value" :value="item.value">
+                  {{ item.label }}
+                </option>
+              </select>
             </div>
 
             <div>
               <label class="form-label small fw-semibold text-dark mb-1">วันที่นัดหมาย <span class="text-danger">*</span></label>
-              <div class="input-group">
-                <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
-                <input type="date" v-model="bookingForm.appointment_date" class="form-control" required>
-              </div>
+              <input type="date" v-model="bookingForm.appointment_date" class="form-control" required>
             </div>
 
             <div class="row g-3">
               <div class="col-sm-6">
                 <label class="form-label small fw-semibold text-dark mb-1">เวลาเริ่ม <span class="text-danger">*</span></label>
-                <div class="input-group">
-                  <span class="input-group-text"><i class="bi bi-clock"></i></span>
-                  <select v-model="bookingForm.start_time" class="form-select font-monospace" required>
-                    <option value="">-- เลือกเวลาเริ่ม --</option>
-                    <option v-for="t in availableStartTimes" :key="t" :value="t">
-                      {{ t }} น.
-                    </option>
-                  </select>
-                </div>
+                <select v-model="bookingForm.start_time" class="form-select font-monospace" required>
+                  <option value="">กรุณาเลือก</option>
+                  <option v-for="t in availableStartTimes" :key="t" :value="t">
+                    {{ t }}
+                  </option>
+                </select>
               </div>
 
               <div class="col-sm-6">
                 <label class="form-label small fw-semibold text-dark mb-1">เวลาสิ้นสุด <span class="text-danger">*</span></label>
-                <div class="input-group">
-                  <span class="input-group-text"><i class="bi bi-clock-fill"></i></span>
-                  <select v-model="bookingForm.end_time" class="form-select font-monospace" required>
-                    <option value="">-- เลือกเวลาสิ้นสุด --</option>
-                    <option v-for="t in availableEndTimes" :key="t" :value="t">
-                      {{ t }} น.
-                    </option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="col-12 mt-1">
-                <div class="d-flex align-items-center justify-content-between text-muted" style="font-size: 0.75rem;">
-                  <span class="d-inline-flex align-items-center gap-1.5">
-                    <i class="bi bi-database-check text-primary"></i>
-                    <span>สล็อตเวลาจากฐานข้อมูล (ช่วงละ {{ clinicSettings.slot_interval_minutes || 30 }} นาที)</span>
-                  </span>
-                  <span class="badge bg-light text-secondary border font-monospace fw-normal">
-                    {{ durationBadge }}
-                  </span>
-                </div>
+                <select v-model="bookingForm.end_time" class="form-select font-monospace" required>
+                  <option value="">กรุณาเลือก</option>
+                  <option v-for="t in availableEndTimes" :key="t" :value="t">
+                    {{ t }}
+                  </option>
+                </select>
               </div>
             </div>
 
+            <div v-if="isEditMode">
+              <label class="form-label small fw-semibold text-dark mb-1">สถานะ</label>
+              <select v-model="bookingForm.status" class="form-select">
+                <option value="pending">รอรับบริการ</option>
+                <option value="arrived">มาถึงแล้ว</option>
+                <option value="cancelled">ยกเลิก</option>
+              </select>
+            </div>
+
             <div>
-              <label class="form-label small fw-semibold text-dark mb-1">อาการ / หมายเหตุการนัด</label>
-              <textarea v-model="bookingForm.note" rows="2" class="form-control" placeholder="ระบุอาการเบื้องต้น หรือหมายเหตุสำหรับแพทย์..."></textarea>
+              <label class="form-label small fw-semibold text-dark mb-1">หมายเหตุ</label>
+              <textarea v-model="bookingForm.note" rows="2" class="form-control"></textarea>
             </div>
           </div>
 
           <div class="modal-footer py-2.5 px-4" style="background-color: var(--corp-white); border-top: 1px solid var(--corp-border-light);">
-            <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">ยกเลิก</button>
-            <button type="submit" class="btn btn-sm btn-corp-primary px-4 py-2 d-inline-flex align-items-center" :disabled="submitting">
-              <span v-if="submitting" class="spinner-border spinner-border-sm me-2" role="status"></span>
+            <button type="button" class="btn btn-sm btn-outline-secondary px-4 py-2" data-bs-dismiss="modal">ยกเลิก</button>
+            <button type="submit" class="btn btn-sm btn-corp-primary px-4 py-2 d-inline-flex align-items-center" :disabled="isSubmitting">
+              <span v-if="isSubmitting" class="spinner-border spinner-border-sm me-2" role="status"></span>
               <i v-else class="bi bi-check-circle me-2"></i>
-              <span>บันทึกนัดหมาย</span>
+              <span>{{ isSubmitting ? 'กำลังบันทึก...' : (isEditMode ? 'บันทึกการแก้ไข' : 'บันทึกนัดหมาย') }}</span>
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal ยืนยันการลบข้อมูล -->
+  <div class="modal fade" id="deleteAppointmentModal" ref="deleteAppointmentModal" tabindex="-1" aria-labelledby="deleteAppointmentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+      <div class="modal-content" style="border-radius: var(--radius-sm); border: 1px solid var(--corp-border);">
+        <div class="modal-body p-4 text-center">
+          <div class="d-inline-flex align-items-center justify-content-center rounded-circle text-danger bg-danger-subtle mb-3" style="width: 56px; height: 56px;">
+            <i class="bi bi-exclamation-triangle" style="font-size: 1.75rem;"></i>
+          </div>
+          <h5 class="fw-bold mb-2 text-dark" id="deleteAppointmentModalLabel">ยืนยันการลบข้อมูล</h5>
+          <p class="text-muted small mb-4">
+            คุณต้องการลบข้อมูลใช่หรือไม่?
+          </p>
+          <div class="d-flex justify-content-center gap-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">
+              ยกเลิก
+            </button>
+            <button 
+              type="button" 
+              class="btn btn-sm btn-danger px-3 fw-semibold d-inline-flex align-items-center gap-1.5"
+              :disabled="isDeleting"
+              @click="deleteAppointment"
+            >
+              <span v-if="isDeleting" class="spinner-border spinner-border-sm" role="status"></span>
+              <i v-else class="bi bi-trash3"></i>
+              <span>{{ isDeleting ? 'กำลังลบ...' : 'ยืนยันการลบ' }}</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -295,14 +305,11 @@ new Vue({
     dropdownPatients: [],
     dropdownStatus: [],
     dropdownAppointmentTime: [],
-    timeSlots: <?= json_encode($timeSlots, JSON_UNESCAPED_UNICODE) ?>,
-    clinicSettings: <?= json_encode($clinicSettings, JSON_UNESCAPED_UNICODE) ?>,
     results: [],
     pageIndex: 1,
     pageSize: 10,
     totalPages: 1,
     totalCount: 0,
-    submitting: false,
     filters: {
       patientId: '',
       doctorId: '',
@@ -317,17 +324,27 @@ new Vue({
       type: 'danger',
       message: ''
     },
+    isSubmitting: false,
+    modalInstance: null,
     bookingForm: {
+      mode: 'create',
+      appointment_id: null,
       patient_id: '',
       doctor_id: '',
       appointment_date: '<?= date('Y-m-d') ?>',
-      start_time: '10:00',
-      end_time: '10:30',
+      start_time: '',
+      end_time: '',
+      status: 'pending',
       note: ''
     },
-    modalInstance: null
+    isDeleting: false,
+    modalInstanceDelete: null,
+    selectedAppointmentToDelete: null,
   },
   computed: {
+    isEditMode() {
+      return this.bookingForm.mode === 'update';
+    },
     pageNumbers() {
       const pages = [];
       const total = this.totalPages;
@@ -347,29 +364,28 @@ new Vue({
       return pages;
     },
     slotTimes() {
-      return (this.timeSlots || []).map(s => s.slot_time.substring(0, 5));
+      return (this.dropdownAppointmentTime || []).map(item => item.value);
     },
     availableStartTimes() {
-      const closeTime = (this.clinicSettings.clinic_close_time || '18:00:00').substring(0, 5);
-      return this.slotTimes.filter(t => t < closeTime);
+      const list = this.slotTimes.length > 1 ? this.slotTimes.slice(0, -1) : [...this.slotTimes];
+      if (this.bookingForm.start_time && !list.includes(this.bookingForm.start_time)) {
+        list.push(this.bookingForm.start_time);
+        list.sort();  
+      }
+      return list;
     },
     availableEndTimes() {
+      let list = [];
       if (!this.bookingForm.start_time) {
-        return this.slotTimes.slice(1);
+        list = this.slotTimes.slice(1);
+      } else {
+        list = this.slotTimes.filter(t => t > this.bookingForm.start_time);
       }
-      return this.slotTimes.filter(t => t > this.bookingForm.start_time);
-    },
-    durationBadge() {
-      const start = this.bookingForm.start_time;
-      const end = this.bookingForm.end_time;
-      if (!start || !end || end <= start) return 'เวลาไม่ถูกต้อง';
-      const [sH, sM] = start.split(':').map(Number);
-      const [eH, eM] = end.split(':').map(Number);
-      const diff = (eH * 60 + eM) - (sH * 60 + sM);
-      if (diff < 60) return `ระยะเวลา: ${diff} นาที`;
-      const hrs = Math.floor(diff / 60);
-      const mins = diff % 60;
-      return `ระยะเวลา: ${hrs} ชม.${mins > 0 ? ' ' + mins + ' นาที' : ''}`;
+      if (this.bookingForm.end_time && !list.includes(this.bookingForm.end_time)) {
+        list.push(this.bookingForm.end_time);
+        list.sort();
+      }
+      return list;
     }
   },
   watch: {
@@ -390,7 +406,6 @@ new Vue({
 
     this.modalInstance = new bootstrap.Modal(this.$refs.bookingModal);
     this.getOverview(1);
-    // this.loadPatients();
 
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('open') === 'booking' || window.location.hash === '#booking') {
@@ -398,11 +413,6 @@ new Vue({
     }
   },
   methods: {
-    getStatusClass(status) {
-      if (status === 'arrived') return 'border-success text-success fw-semibold';
-      if (status === 'cancelled') return 'border-danger text-danger';
-      return 'border-warning text-dark fw-semibold';
-    },
     async getOverview(pageIndex = 1) {
       this.pageIndex = Math.max(1, pageIndex);
       try {
@@ -465,32 +475,9 @@ new Vue({
         console.error(e);
       }
     },
-    async updateStatus(appt) {
-      try {
-        const res = await fetch('/api/index/ajax.index.php?action=update_appointment_status', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            appointment_id: appt.id,
-            status: appt.status
-          })
-        });
-        const data = await res.json();
-        this.alert = {
-          type: data.success ? 'success' : 'danger',
-          message: data.message || data.error
-        };
-      } catch (e) {
-        this.alert = { type: 'danger', message: 'เกิดข้อผิดพลาดในการเปลี่ยนสถานะ' };
-      }
-    },
     openBookingModal() {
       this.modalAlert.message = '';
-      this.bookingForm.appointment_date = this.filters.date || '<?= date('Y-m-d') ?>';
-      this.bookingForm.start_time = '10:00';
-      this.bookingForm.end_time = '10:30';
+      this.resetForm();
       if (!this.modalInstance && this.$refs.bookingModal) {
         this.modalInstance = new bootstrap.Modal(this.$refs.bookingModal);
       }
@@ -498,29 +485,124 @@ new Vue({
         this.modalInstance.show();
       }
     },
-    async submitBooking() {
-      this.submitting = true;
+    editAppointment(a) {
       this.modalAlert.message = '';
+      this.bookingForm = {
+        mode: 'update',
+        appointment_id: a.id,
+        patient_id: a.patient_id,
+        doctor_id: a.doctor_id,
+        appointment_date: a.appointment_date,
+        note: a.note || '',
+        status: a.status || 'pending',
+        end_time: (a.end_time || '').substring(0, 5),
+        start_time: (a.start_time || '').substring(0, 5)
+      };
+      this.$nextTick(() => {
+        this.bookingForm.end_time = (a.end_time || '').substring(0, 5);
+      });
+      if (!this.modalInstance && this.$refs.bookingModal) {
+        this.modalInstance = new bootstrap.Modal(this.$refs.bookingModal);
+      }
+      if (this.modalInstance) {
+        this.modalInstance.show();
+      }
+    },
+    resetForm() {
+      this.bookingForm = {
+        mode: 'create',
+        appointment_id: null,
+        patient_id: '',
+        doctor_id: '',
+        appointment_date: this.filters.date || '<?= date('Y-m-d') ?>',
+        start_time: '',
+        end_time: '',
+        status: 'pending',
+        note: ''
+      };
+    },
+    confirmDeleteAppointment(a) {
+      this.selectedAppointmentToDelete = a;
+      if (!this.modalInstanceDelete && this.$refs.deleteAppointmentModal) {
+        this.modalInstanceDelete = new bootstrap.Modal(this.$refs.deleteAppointmentModal);
+      }
+      if (this.modalInstanceDelete) {
+        this.modalInstanceDelete.show();
+      }
+    },
+    async deleteAppointment() {
+      if (!this.selectedAppointmentToDelete) return;
+      this.isDeleting = true;
       try {
-        const res = await fetch('/api/booking/ajax.booking.php?action=save_appointment', {
+        const res = await fetch('/api/index/ajax.index.php', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(this.bookingForm)
+          body: JSON.stringify({
+            action: 'deleteAppointment',
+            appointment_id: this.selectedAppointmentToDelete.id
+          })
         });
         const data = await res.json();
         if (data.success) {
-          this.modalInstance.hide();
+          if (this.modalInstanceDelete) {
+            this.modalInstanceDelete.hide();
+          }
           this.alert = {
             type: 'success',
-            message: data.message || 'สร้างนัดหมายสำเร็จเรียบร้อยแล้ว'
+            message: data.message || 'ลบรายการนัดหมายเรียบร้อยแล้ว'
           };
-          this.filters.date = this.bookingForm.appointment_date;
-          this.getOverview(1);
-          // Reset form
-          this.bookingForm.patient_id = '';
-          this.bookingForm.note = '';
+          this.selectedAppointmentToDelete = null;
+          this.getOverview(this.pageIndex);
+        } else {
+          this.alert = {
+            type: 'danger',
+            message: data.error || 'เกิดข้อผิดพลาดในการลบนัดหมาย'
+          };
+        }
+      } catch (e) {
+        this.alert = {
+          type: 'danger',
+          message: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์'
+        };
+      } finally {
+        this.isDeleting = false;
+      }
+    },
+    async submitBooking() {
+      this.isSubmitting = true;
+      this.modalAlert.message = '';
+      try {
+        const res = await fetch('/api/index/ajax.index.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            action: 'saveAppointment',
+            mode: this.bookingForm.mode,
+            appointment_id: this.bookingForm.appointment_id,
+            patient_id: this.bookingForm.patient_id,
+            doctor_id: this.bookingForm.doctor_id,
+            appointment_date: this.bookingForm.appointment_date,
+            start_time: this.bookingForm.start_time,
+            end_time: this.bookingForm.end_time,
+            status: this.bookingForm.status,
+            note: this.bookingForm.note
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          if (this.modalInstance) {
+            this.modalInstance.hide();
+          }
+          this.alert = {
+            type: 'success',
+            message: data.message || (this.isEditMode ? 'แก้ไขข้อมูลการนัดหมายสำเร็จ' : 'สร้างนัดหมายสำเร็จเรียบร้อยแล้ว')
+          };
+          this.getOverview(this.pageIndex);
+          this.resetForm();
         } else {
           this.modalAlert = {
             type: 'danger',
@@ -533,7 +615,7 @@ new Vue({
           message: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์'
         };
       } finally {
-        this.submitting = false;
+        this.isSubmitting = false;
       }
     }
   }

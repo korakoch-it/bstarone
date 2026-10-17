@@ -1,7 +1,7 @@
 <?php
 // =====================================================================
-// page/patients.php - ระบบจัดการข้อมูลผู้ป่วย (Flat Design Corporativo)
-// Bootstrap 5 + Vue 2 (CDN) | Live Search & Pagination
+// page/patients.php - จัดการข้อมูลผู้ป่วย (Flat Design Corporativo)
+// Bootstrap 5.3.3 | Powered by Vue 2 (CDN) | Modal Add/Edit
 // Endpoint: /api/patients/ajax.patient.php
 // =====================================================================
 
@@ -10,221 +10,150 @@ $activePage = 'patients';
 require_once __DIR__ . '/header.php';
 ?>
 
-<div id="app" v-cloak class="row g-4 align-items-start">
-
-  <!-- Form Column: ฟอร์มเพิ่ม หรือ แก้ไข -->
-  <div class="col-lg-4">
-    <div class="card sticky-top" style="top: 85px;">
-      <div class="card-header d-flex align-items-center justify-content-between">
-        <h2 class="h6 fw-bold text-dark d-flex align-items-center gap-2 mb-0">
-          <div class="d-flex align-items-center justify-content-center text-white" style="background-color: var(--corp-primary); width: 32px; height: 32px; border-radius: var(--radius-sm);">
-            <i :class="isEditMode ? 'bi bi-pencil-square' : 'bi bi-person-plus-fill'"></i>
-          </div>
-          <span>{{ isEditMode ? 'แก้ไขข้อมูล (' + form.hn + ')' : 'ลงทะเบียนผู้ป่วยใหม่' }}</span>
-        </h2>
-        <button 
-          v-if="isEditMode"
-          type="button" 
-          @click="resetForm" 
-          class="btn btn-sm btn-outline-secondary py-1 px-2.5 small"
-        >
-          <i class="bi bi-x"></i> ยกเลิก
-        </button>
-      </div>
-
-      <div class="card-body p-3 p-sm-4">
-        <!-- Form Alert Area -->
-        <div v-if="formAlert.message" :class="['alert', 'alert-' + formAlert.type, 'py-2 px-3 small d-flex align-items-center gap-2 mb-3']">
-          <i :class="['bi', formAlert.type === 'success' ? 'bi-check-circle' : 'bi-exclamation-circle']"></i>
-          <span>{{ formAlert.message }}</span>
-        </div>
-
-        <form @submit.prevent="savePatient" class="vstack gap-3">
-          <!-- HN Display (Show only in Edit Mode) -->
-          <div v-if="isEditMode">
-            <label class="form-label small fw-semibold text-dark mb-1">รหัสประจำตัวผู้ป่วย (HN)</label>
-            <input type="text" :value="form.hn" class="form-control form-control-sm bg-light font-monospace fw-bold text-primary" readonly>
-            <div class="form-text small text-muted"><i class="bi bi-lock me-1"></i>รหัส HN ถูกล็อกไม่สามารถแก้ไขได้</div>
-          </div>
-
-          <div>
-            <label class="form-label small fw-semibold text-dark mb-1">
-              ชื่อ-นามสกุล <span class="text-danger">*</span>
-            </label>
-            <div class="input-group">
-              <span class="input-group-text"><i class="bi bi-person"></i></span>
-              <input type="text" v-model.trim="form.full_name" class="form-control" required placeholder="เช่น ธนากรณ์ เจริญสุข">
+<div id="app" v-cloak>
+  <div class="card mb-4">
+    <div class="card-header py-3 px-4">
+      <div class="row">
+        <div class="col-12 d-flex flex-wrap justify-content-between align-items-center gap-3">
+          <div class="d-flex align-items-center gap-3">
+            <div class="d-flex align-items-center justify-content-center text-white" style="background-color: var(--corp-primary); width: 38px; height: 38px; border-radius: var(--radius-sm);">
+              <i class="bi bi-people" style="font-size: 1.15rem;"></i>
+            </div>
+            <div>
+              <h1 class="h5 fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+                <span>จัดการข้อมูลผู้ป่วย</span>
+              </h1>
             </div>
           </div>
 
-          <div>
-            <label class="form-label small fw-semibold text-dark mb-1">
-              เบอร์โทรศัพท์ <span class="text-danger">*</span>
-            </label>
-            <div class="input-group">
-              <span class="input-group-text"><i class="bi bi-telephone"></i></span>
-              <input type="text" v-model.trim="form.phone" class="form-control" required placeholder="เช่น 081-234-5678">
-            </div>
-            <div class="form-text small text-muted"><i class="bi bi-info-circle me-1"></i>แปลงเป็นมาตรฐาน 0812345678 อัตโนมัติ</div>
-          </div>
-
-          <div>
-            <label class="form-label small fw-semibold text-dark mb-1">
-              วันเกิด <span class="text-danger">*</span>
-            </label>
-            <div class="input-group">
-              <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
-              <input type="date" v-model="form.birth_date" class="form-control" required>
-            </div>
-          </div>
-
-          <div v-if="isEditMode">
-            <label class="form-label small fw-semibold text-dark mb-1">สถานะผู้ป่วย</label>
-            <select v-model="form.is_active" class="form-select">
-              <option :value="1">ใช้งานปกติ (Active)</option>
-              <option :value="0">ระงับการใช้งาน (Inactive)</option>
-            </select>
-          </div>
-
-          <div class="pt-2">
-            <button 
-              type="submit" 
-              class="btn btn-corp-primary w-100 py-2.5 fw-semibold d-inline-flex align-items-center justify-content-center gap-2"
-              :disabled="submitting"
-            >
-              <span v-if="submitting" class="spinner-border spinner-border-sm" role="status"></span>
-              <i v-else :class="isEditMode ? 'bi bi-save' : 'bi bi-check2-circle'"></i>
-              <span>{{ submitting ? 'กำลังบันทึกข้อมูล...' : (isEditMode ? 'บันทึกการแก้ไข' : 'บันทึกข้อมูลผู้ป่วย') }}</span>
+          <div class="d-flex flex-wrap align-items-center gap-2">
+            <button type="button" class="btn btn-sm btn-corp-primary d-inline-flex align-items-center gap-1.5 px-3" @click="openPatientModal">
+              <i class="bi bi-plus-lg"></i>
+              <span>ลงทะเบียนผู้ป่วยใหม่</span>
             </button>
           </div>
-        </form>
+        </div>
+        <div class="col-12 mt-3">
+          <div class="row">
+            <div class="col-md-5 col-lg-4">
+              <label for="filterPatient" class="form-label">ค้นหาผู้ป่วย</label>
+              <input 
+                  id="filterPatient"
+                  type="text" 
+                  v-model="filterPatient" 
+                  class="form-control" 
+                  placeholder="พิมพ์ชื่อ, HN หรือเบอร์โทร..."
+                  autocomplete="off"
+                >
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Table Column: ตารางผู้ป่วย + ช่องค้นหา -->
-  <div class="col-lg-8">
-    <div class="card">
-      <div class="card-header">
-        <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3">
-          <div>
-            <h1 class="h6 fw-bold text-dark d-flex align-items-center gap-2 mb-1">
-              <i class="bi bi-people text-primary"></i>
-              <span>รายชื่อผู้ป่วยในระบบ</span>
-              <span class="badge bg-light text-secondary border fw-normal">
-                {{ loading ? 'กำลังโหลด...' : total + ' คน' }}
-              </span>
-            </h1>
-            <p class="text-muted small mb-0">
-              ค้นหาจากชื่อ, HN หรือเบอร์โทรศัพท์ ดึงข้อมูลแบบ AJAX
-            </p>
-          </div>
-
-          <!-- Live Search Box with Debounce -->
-          <div class="input-group input-group-sm" style="max-width: 280px;">
-            <span class="input-group-text"><i class="bi bi-search"></i></span>
-            <input 
-              type="text" 
-              v-model="searchQuery" 
-              class="form-control" 
-              placeholder="พิมพ์ชื่อ, HN, เบอร์โทร..."
-              autocomplete="off"
-            >
-            <button 
-              v-if="searchQuery"
-              type="button" 
-              @click="clearSearch" 
-              class="btn btn-outline-secondary"
-              title="ล้างค่าค้นหา"
-            >
-              <i class="bi bi-x"></i>
-            </button>
-          </div>
+    <div class="card-body p-0">
+      <!-- Main Page Alert -->
+      <div v-if="alert.message" class="p-3 pb-0">
+        <div :class="['alert', 'alert-' + alert.type, 'py-2 px-3 small d-flex align-items-center gap-2 mb-0']">
+          <i :class="['bi', alert.type === 'success' ? 'bi-check-circle' : 'bi-exclamation-circle']"></i>
+          <span>{{ alert.message }}</span>
         </div>
       </div>
 
-      <div class="position-relative table-responsive" style="min-height: 250px;">
-        <div v-if="loading" class="position-absolute top-0 start-0 w-100 h-100 bg-white bg-opacity-75 d-flex align-items-center justify-content-center" style="z-index: 10;">
-          <div class="d-flex align-items-center gap-2 px-3 py-2 bg-white border text-primary fw-semibold small" style="border-radius: var(--radius-sm);">
-            <span class="spinner-border spinner-border-sm" role="status"></span>
-            <span>กำลังดึงข้อมูลผู้ป่วยผ่าน AJAX...</span>
-          </div>
-        </div>
-
+      <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
           <thead>
             <tr>
-              <th class="ps-4 py-3" style="width: 120px;">HN</th>
+              <th class="ps-4 py-3" style="width: 140px;">HN</th>
               <th class="py-3">ชื่อ-นามสกุล</th>
-              <th class="py-3">เบอร์โทร</th>
-              <th class="py-3">อายุ</th>
-              <th class="py-3" style="width: 110px;">สถานะ</th>
-              <th class="py-3">วันที่ลงทะเบียน</th>
+              <th class="py-3" style="width: 160px;">เบอร์โทรศัพท์</th>
+              <th class="py-3" style="width: 100px;">อายุ</th>
+              <th class="py-3" style="width: 130px;">สถานะ</th>
+              <th class="py-3" style="width: 160px;">วันที่ลงทะเบียน</th>
               <th class="pe-4 py-3 text-end" style="width: 100px;">จัดการ</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-if="!loading && patients.length === 0">
+            <tr v-if="results.length === 0">
               <td colspan="7" class="text-center text-muted py-5">
                 <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary opacity-50"></i>
-                <div class="fw-medium">
-                  {{ searchQuery ? 'ไม่พบข้อมูลผู้ป่วยที่ตรงกับคำค้นหา' : 'ยังไม่มีข้อมูลผู้ป่วยในระบบ' }}
-                </div>
+                <div class="fw-medium">{{ filterPatient ? 'ไม่พบข้อมูลผู้ป่วยที่ตรงกับคำค้นหา' : 'ยังไม่มีข้อมูลผู้ป่วยในระบบ' }}</div>
               </td>
             </tr>
-            <tr v-for="p in patients" :key="p.id">
-              <td class="ps-4">
-                <span class="badge bg-light text-primary font-monospace border">{{ p.hn }}</span>
-              </td>
+            <tr v-for="p in results" :key="p.id">
+              <td class="ps-4 fw-semibold">{{ p.hn }}</td>
               <td class="fw-semibold text-dark">{{ p.full_name }}</td>
               <td class="text-muted small font-monospace">{{ formatPhone(p.phone) }}</td>
               <td class="text-muted small">{{ calculateAge(p.birth_date) }}</td>
               <td>
-                <span :class="p.is_active == 1 ? 'badge bg-success-subtle text-success border border-success-subtle' : 'badge bg-secondary-subtle text-secondary border border-secondary-subtle'">
-                  <i :class="p.is_active == 1 ? 'bi bi-check-circle-fill me-1' : 'bi bi-dash-circle me-1'"></i>
-                  {{ p.is_active == 1 ? 'ใช้งาน' : 'ระงับ' }}
-                </span>
+                <template v-if="p.is_active == 1">
+                  <span class="badge rounded-pill text-bg-success">ใช้งาน</span>
+                </template>
+                <template v-else>
+                  <span class="badge rounded-pill text-bg-danger">ระงับ</span>
+                </template>
               </td>
               <td class="text-muted small">{{ p.registration_date }}</td>
               <td class="pe-4 text-end">
-                <button 
-                  type="button" 
-                  class="btn btn-sm btn-outline-primary py-1 px-2.5 d-inline-flex align-items-center gap-1"
-                  @click="editPatient(p)"
-                >
-                  <i class="bi bi-pencil"></i> แก้ไข
-                </button>
+                <div class="d-inline-flex align-items-center gap-1.5">
+                  <button 
+                    type="button" 
+                    class="btn btn-sm btn-outline-primary p-1.5 d-inline-flex align-items-center justify-content-center"
+                    style="width: 32px; height: 32px;"
+                    title="แก้ไขข้อมูลผู้ป่วย"
+                    @click="editPatient(p)"
+                  >
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button 
+                    type="button" 
+                    class="btn btn-sm btn-outline-danger p-1.5 d-inline-flex align-items-center justify-content-center"
+                    style="width: 32px; height: 32px;"
+                    title="ลบข้อมูลผู้ป่วย"
+                    @click="confirmDeletePatient(p)"
+                  >
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <!-- Pagination Footer -->
       <div class="card-footer d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
         <span class="text-muted small">
-          หน้า {{ currentPage }} / {{ totalPages || 1 }} (ทั้งหมด {{ total }} รายการ)
+          หน้า {{ pageIndex }} / {{ totalPages || 1 }} (ทั้งหมด {{ totalCount }} รายการ)
         </span>
-        <nav aria-label="Pagination">
+        <nav aria-label="Page navigation">
           <ul class="pagination pagination-sm mb-0">
-            <li class="page-item" :class="{ disabled: currentPage <= 1 }">
-              <button class="page-link text-dark" @click="loadPatients(currentPage - 1)">‹ ก่อนหน้า</button>
+            <li class="page-item" :class="{ disabled: pageIndex <= 1 }">
+              <button type="button" class="page-link" @click="getOverview(pageIndex - 1)" :disabled="pageIndex <= 1">
+                ‹ ก่อนหน้า
+              </button>
             </li>
 
             <li 
-              v-for="p in pageNumbers" 
-              :key="p" 
+              v-for="(p, idx) in pageNumbers" 
+              :key="idx" 
               class="page-item" 
-              :class="{ active: p === currentPage, disabled: p === '...' }"
+              :class="{ active: p === pageIndex, disabled: p === '...' }"
             >
               <span v-if="p === '...'" class="page-link">...</span>
-              <button v-else class="page-link" :class="p === currentPage ? 'bg-primary border-primary fw-bold text-white' : 'text-dark'" @click="loadPatients(p)">
+              <button 
+                v-else 
+                type="button" 
+                class="page-link" 
+                @click="getOverview(p)"
+              >
                 {{ p }}
               </button>
             </li>
 
-            <li class="page-item" :class="{ disabled: currentPage >= totalPages || totalPages === 0 }">
-              <button class="page-link text-dark" @click="loadPatients(currentPage + 1)">ถัดไป ›</button>
+            <li class="page-item" :class="{ disabled: pageIndex >= totalPages || totalPages === 0 }">
+              <button type="button" class="page-link" @click="getOverview(pageIndex + 1)" :disabled="pageIndex >= totalPages || totalPages === 0">
+                ถัดไป ›
+              </button>
             </li>
           </ul>
         </nav>
@@ -232,25 +161,150 @@ require_once __DIR__ . '/header.php';
     </div>
   </div>
 
+  <!-- Modal ลงทะเบียน / แก้ไขข้อมูลผู้ป่วย (Vue 2 + Bootstrap 5) -->
+  <div class="modal fade" id="patientModal" ref="patientModal" tabindex="-1" aria-labelledby="patientModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 550px;">
+      <div class="modal-content" style="border-radius: var(--radius-sm); border: 1px solid var(--corp-border);">
+        <div class="modal-header py-3 px-4" style="background-color: var(--corp-white); border-bottom: 1px solid var(--corp-border-light);">
+          <div class="d-flex align-items-center gap-2.5">
+            <h2 class="h6 fw-bold mb-0 text-dark" id="patientModalLabel">
+              {{ isEditMode ? 'แก้ไขข้อมูลผู้ป่วย (' + form.hn + ')' : 'ลงทะเบียนผู้ป่วยใหม่' }}
+            </h2>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <form @submit.prevent="savePatient">
+          <div class="modal-body p-4 vstack gap-3">
+            <!-- Modal Alert -->
+            <div v-if="modalAlert.message" :class="['alert', 'alert-' + modalAlert.type, 'py-2 px-3 small d-flex align-items-center gap-2 mb-0']">
+              <i :class="['bi', modalAlert.type === 'success' ? 'bi-check-circle' : 'bi-exclamation-circle']"></i>
+              <span>{{ modalAlert.message }}</span>
+            </div>
+
+            <!-- HN Display (Show only in Edit Mode) -->
+            <div v-if="isEditMode">
+              <label class="form-label small fw-semibold text-dark mb-1">รหัสประจำตัวผู้ป่วย (HN)</label>
+              <input disabled type="text" :value="form.hn" class="form-control bg-light" readonly>
+            </div>
+
+            <div>
+              <label class="form-label small fw-semibold text-dark mb-1">
+                ชื่อ-นามสกุล <span class="text-danger">*</span>
+              </label>
+              <input type="text" v-model.trim="form.full_name" class="form-control" required placeholder="เช่น สมชาย ใจดี">
+            </div>
+
+            <div>
+              <label class="form-label small fw-semibold text-dark mb-1">
+                เบอร์โทรศัพท์ <span class="text-danger">*</span>
+              </label>
+              <input type="text" v-model.trim="form.phone" class="form-control" required placeholder="เช่น 081-234-5678">
+            </div>
+
+            <div>
+              <label class="form-label small fw-semibold text-dark mb-1">
+                วันเกิด <span class="text-danger">*</span>
+              </label>
+              <input type="date" v-model="form.birth_date" class="form-control" required>
+            </div>
+
+            <div v-if="isEditMode" class="d-flex align-items-center justify-content-between">
+              <!-- <div> -->
+                <label class="form-label small fw-semibold text-dark mb-0 d-block" for="patientStatusSwitch">
+                  สถานะผู้ป่วย
+                </label>
+                <!-- <span class="text-muted" style="font-size: 0.8rem;">
+                  {{ form.is_active ? 'ใช้งานปกติ (Active)' : 'ระงับการใช้งาน (Inactive)' }}
+                </span> -->
+              <!-- </div> -->
+              <div class="form-check form-switch mb-0">
+                <input 
+                  class="form-check-input" 
+                  type="checkbox" 
+                  role="switch" 
+                  id="patientStatusSwitch" 
+                  v-model="form.is_active"
+                  :true-value="1"
+                  :false-value="0"
+                  style="cursor: pointer; width: 2.5em; height: 1.25em;"
+                >
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer px-4 py-3 bg-light">
+            <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">
+              ยกเลิก
+            </button>
+            <button 
+              type="submit" 
+              class="btn btn-sm btn-corp-primary px-3 fw-semibold d-inline-flex align-items-center gap-1.5"
+              :disabled="isSubmitting"
+            >
+              <span v-if="isSubmitting" class="spinner-border spinner-border-sm" role="status"></span>
+              <span>{{ isSubmitting ? 'กำลังบันทึก...' : 'บันทึกข้อมูล' }}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal ยืนยันการลบข้อมูลผู้ป่วย (Vue 2 + Bootstrap 5) -->
+  <div class="modal fade" id="deletePatientModal" ref="deletePatientModal" tabindex="-1" aria-labelledby="deletePatientModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+      <div class="modal-content" style="border-radius: var(--radius-sm); border: 1px solid var(--corp-border);">
+        <div class="modal-body p-4 text-center">
+          <div class="d-inline-flex align-items-center justify-content-center rounded-circle text-danger bg-danger-subtle mb-3" style="width: 56px; height: 56px;">
+            <i class="bi bi-exclamation-triangle" style="font-size: 1.75rem;"></i>
+          </div>
+          <h5 class="fw-bold mb-2 text-dark" id="deletePatientModalLabel">ยืนยันการลบข้อมูล</h5>
+          <p class="text-muted small mb-4">
+            คุณต้องการลบข้อมูลใช่หรือไม่?
+          </p>
+          <div class="d-flex justify-content-center gap-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">
+              ยกเลิก
+            </button>
+            <button 
+              type="button" 
+              class="btn btn-sm btn-danger px-3 fw-semibold d-inline-flex align-items-center gap-1.5"
+              :disabled="isDeleting"
+              @click="deletePatient"
+            >
+              <span v-if="isDeleting" class="spinner-border spinner-border-sm" role="status"></span>
+              <i v-else class="bi bi-trash3"></i>
+              <span>{{ isDeleting ? 'กำลังลบ...' : 'ยืนยันการลบ' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
 new Vue({
   el: '#app',
   data: {
-    patients: [],
-    total: 0,
-    currentPage: 1,
-    perPage: 10,
+    results: [],
+    pageIndex: 1,
+    pageSize: 10,
+    totalCount: 0,
     totalPages: 1,
-    searchQuery: '',
+    filterPatient: '',
     searchDebounceTimer: null,
-    loading: false,
-    submitting: false,
-    formAlert: {
+    alert: {
       type: 'success',
       message: ''
     },
+    modalAlert: {
+      type: 'danger',
+      message: ''
+    },
+    isSubmitting: false,
+    modalInstance: null,
     form: {
       mode: 'create',
       patient_id: '',
@@ -259,7 +313,10 @@ new Vue({
       phone: '',
       birth_date: '',
       is_active: 1
-    }
+    },
+    isDeleting: false,
+    modalInstanceDelete: null,
+    selectedPatientToDelete: null
   },
   computed: {
     isEditMode() {
@@ -268,7 +325,7 @@ new Vue({
     pageNumbers() {
       const pages = [];
       const total = this.totalPages;
-      const current = this.currentPage;
+      const current = this.pageIndex;
 
       if (total <= 7) {
         for (let i = 1; i <= total; i++) pages.push(i);
@@ -285,38 +342,40 @@ new Vue({
     }
   },
   watch: {
-    searchQuery() {
+    filterPatient() {
       clearTimeout(this.searchDebounceTimer);
       this.searchDebounceTimer = setTimeout(() => {
-        this.loadPatients(1);
+        this.getOverview(1);
       }, 250);
     }
   },
   mounted() {
-    this.loadPatients(1);
+    this.getOverview(1);
+    this.modalInstance = new bootstrap.Modal(this.$refs.patientModal);
   },
   methods: {
-    async loadPatients(page = 1) {
-      this.loading = true;
-      this.currentPage = Math.max(1, page);
+    async getOverview(page = 1) {
+      this.pageIndex = Math.max(1, page);
       try {
-        const url = `/api/patients/ajax.patient.php?action=get_patients&search=${encodeURIComponent(this.searchQuery)}&page=${this.currentPage}&per_page=${this.perPage}`;
-        const res = await fetch(url);
+        const res = await fetch('/api/patients/ajax.patient.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            action: 'getOverview',
+            filterPatient: this.filterPatient,
+            pageIndex: this.pageIndex,
+            pageSize: this.pageSize
+          })
+        });
         const data = await res.json();
-        if (data.success) {
-          this.patients = data.data || [];
-          this.total = data.total || 0;
-          this.totalPages = data.total_pages || 1;
-        }
+        this.results = data.data || [];
+        this.totalCount = data.totalCount || 0;
+        this.totalPages = data.totalPages || 1;
       } catch (e) {
         console.error(e);
-      } finally {
-        this.loading = false;
       }
-    },
-    clearSearch() {
-      this.searchQuery = '';
-      this.loadPatients(1);
     },
     formatPhone(phone) {
       if (!phone) return '-';
@@ -333,8 +392,18 @@ new Vue({
       const age = Math.abs(ageDate.getUTCFullYear() - 1970);
       return age + ' ปี';
     },
+    openPatientModal() {
+      this.modalAlert.message = '';
+      this.resetForm();
+      if (!this.modalInstance && this.$refs.patientModal) {
+        this.modalInstance = new bootstrap.Modal(this.$refs.patientModal);
+      }
+      if (this.modalInstance) {
+        this.modalInstance.show();
+      }
+    },
     editPatient(p) {
-      this.formAlert.message = '';
+      this.modalAlert.message = '';
       this.form.mode = 'update';
       this.form.patient_id = p.id;
       this.form.hn = p.hn;
@@ -342,10 +411,15 @@ new Vue({
       this.form.phone = p.phone;
       this.form.birth_date = p.birth_date;
       this.form.is_active = p.is_active !== undefined ? Number(p.is_active) : 1;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      if (!this.modalInstance && this.$refs.patientModal) {
+        this.modalInstance = new bootstrap.Modal(this.$refs.patientModal);
+      }
+      if (this.modalInstance) {
+        this.modalInstance.show();
+      }
     },
     resetForm() {
-      this.formAlert.message = '';
       this.form = {
         mode: 'create',
         patient_id: '',
@@ -357,46 +431,97 @@ new Vue({
       };
     },
     async savePatient() {
-      this.submitting = true;
-      this.formAlert.message = '';
+      this.isSubmitting = true;
+      this.modalAlert.message = '';
       try {
-        const payload = {
-          mode: this.form.mode,
-          patient_id: this.form.patient_id || undefined,
-          full_name: this.form.full_name,
-          phone: this.form.phone,
-          birth_date: this.form.birth_date,
-          is_active: this.form.is_active !== undefined ? this.form.is_active : 1
-        };
-
-        const res = await fetch('/api/patients/ajax.patient.php?action=save_patient', {
+        const res = await fetch('/api/patients/ajax.patient.php', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(payload)
+          body: JSON.stringify({
+            action: 'savePatient',
+            mode: this.form.mode,
+            patient_id: this.form.patient_id || undefined,
+            full_name: this.form.full_name,
+            phone: this.form.phone,
+            birth_date: this.form.birth_date,
+            is_active: this.form.is_active !== undefined ? this.form.is_active : 1
+          })
         });
         const result = await res.json();
         if (result.success) {
-          this.formAlert = {
+          if (this.modalInstance) {
+            this.modalInstance.hide();
+          }
+          this.alert = {
             type: 'success',
             message: result.message || 'บันทึกข้อมูลเรียบร้อยแล้ว'
           };
           this.resetForm();
-          this.loadPatients(this.currentPage);
+          this.getOverview(this.pageIndex);
         } else {
-          this.formAlert = {
+          this.modalAlert = {
             type: 'danger',
             message: result.error || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล'
           };
         }
       } catch (e) {
-        this.formAlert = {
+        this.modalAlert = {
           type: 'danger',
           message: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์'
         };
       } finally {
-        this.submitting = false;
+        this.isSubmitting = false;
+      }
+    },
+    confirmDeletePatient(p) {
+      this.selectedPatientToDelete = p;
+      if (!this.modalInstanceDelete && this.$refs.deletePatientModal) {
+        this.modalInstanceDelete = new bootstrap.Modal(this.$refs.deletePatientModal);
+      }
+      if (this.modalInstanceDelete) {
+        this.modalInstanceDelete.show();
+      }
+    },
+    async deletePatient() {
+      if (!this.selectedPatientToDelete) return;
+      this.isDeleting = true;
+      try {
+        const res = await fetch('/api/patients/ajax.patient.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            action: 'deletePatient',
+            patient_id: this.selectedPatientToDelete.id
+          })
+        });
+        const result = await res.json();
+        if (result.success) {
+          if (this.modalInstanceDelete) {
+            this.modalInstanceDelete.hide();
+          }
+          this.alert = {
+            type: 'success',
+            message: result.message || 'ลบข้อมูลผู้ป่วยเรียบร้อยแล้ว'
+          };
+          this.selectedPatientToDelete = null;
+          this.getOverview(this.pageIndex);
+        } else {
+          this.alert = {
+            type: 'danger',
+            message: result.error || 'เกิดข้อผิดพลาดในการลบข้อมูล'
+          };
+        }
+      } catch (e) {
+        this.alert = {
+          type: 'danger',
+          message: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์'
+        };
+      } finally {
+        this.isDeleting = false;
       }
     }
   }

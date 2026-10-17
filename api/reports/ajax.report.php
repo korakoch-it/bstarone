@@ -9,8 +9,8 @@ header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/class.report.php';
 
 $api = new ClassReport();
-$action = $_GET['action'] ?? '';
 
+$action = $_GET['action'] ?? '';
 try {
     switch ($action) {
         case 'get_report':

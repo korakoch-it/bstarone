@@ -22,18 +22,18 @@ class ClassIndex extends Database
         $status = !empty($status) ? trim($status) : null;
 
         // 1. นับจำนวนทั้งหมด
-        $countSql = "SELECT COUNT(*) FROM appointments WHERE 1=1";
+        $countSql = "SELECT COUNT(*) FROM appointments a JOIN patients p ON a.patient_id = p.id WHERE a.is_delete = 0 AND p.is_delete = 0";
         if ($targetDate !== null) {
-            $countSql .= " AND appointment_date = :appointment_date";
+            $countSql .= " AND a.appointment_date = :appointment_date";
         }
         if ($doctorId !== null && $doctorId > 0) {
-            $countSql .= " AND doctor_id = :doctor_id";
+            $countSql .= " AND a.doctor_id = :doctor_id";
         }
         if ($patientId !== null && $patientId > 0) {
-            $countSql .= " AND patient_id = :patient_id";
+            $countSql .= " AND a.patient_id = :patient_id";
         }
         if ($status !== null) {
-            $countSql .= " AND status = :status";
+            $countSql .= " AND a.status = :status";
         }
         $countStmt = $this->pdo->prepare($countSql);
         if ($targetDate !== null) {
@@ -54,6 +54,8 @@ class ClassIndex extends Database
         // 2. ดึงข้อมูลแบ่งหน้า
         $sql = "
             SELECT a.id
+                , a.patient_id
+                , a.doctor_id
                 , a.appointment_date
                 , a.start_time
                 , a.end_time
@@ -67,7 +69,7 @@ class ClassIndex extends Database
             FROM appointments a
             JOIN patients p ON a.patient_id = p.id
             JOIN doctors d ON a.doctor_id = d.id
-            WHERE 1=1
+            WHERE a.is_delete = 0 AND p.is_delete = 0
         ";
         if ($targetDate !== null) {
             $sql .= " AND a.appointment_date = :appointment_date";
@@ -109,17 +111,148 @@ class ClassIndex extends Database
         ];
     }
 
-    /**
-     * เปลี่ยนสถานะนัดหมาย (รอ / มาแล้ว / ยกเลิก)
-     */
-    public function updateStatus(int $id, string $status): bool
+    public function create(array $data): int
     {
-        $allowed = ['pending', 'arrived', 'cancelled'];
-        if (!in_array($status, $allowed, true)) {
-            throw new InvalidArgumentException("สถานะไม่ถูกต้อง: ต้องเป็น pending, arrived หรือ cancelled");
+        $patientId = (int)($data['patient_id'] ?? 0);
+        $doctorId = (int)($data['doctor_id'] ?? 0);
+        $date = trim($data['appointment_date'] ?? '');
+        $startTime = trim($data['start_time'] ?? '');
+        $endTime = trim($data['end_time'] ?? '');
+        $note = trim($data['note'] ?? '');
+
+        if ($patientId <= 0 || $doctorId <= 0 || empty($date) || empty($startTime) || empty($endTime)) {
+            throw new InvalidArgumentException("กรุณากรอกข้อมูลการนัดหมายให้ครบถ้วน");
         }
 
-        $stmt = $this->pdo->prepare("UPDATE appointments SET status = :status WHERE id = :id");
-        return $stmt->execute([':status' => $status, ':id' => $id]);
+        if (strlen($startTime) === 5) $startTime .= ':00';
+        if (strlen($endTime) === 5) $endTime .= ':00';
+
+        if ($startTime >= $endTime) {
+            throw new InvalidArgumentException("เวลาเริ่มต้นต้องน้อยกว่าเวลาสิ้นสุด");
+        }
+
+        $conflict = $this->checkConflict($doctorId, $date, $startTime, $endTime);
+        if ($conflict) {
+            $conflictRange = substr($conflict['start_time'], 0, 5) . ' - ' . substr($conflict['end_time'], 0, 5);
+            throw new RuntimeException(
+                "แพทย์ท่านนี้มีนัดหมายแล้วในช่วงเวลา {$conflictRange} น. (คนไข้: {$conflict['patient_name']})"
+            );
+        }
+
+        $this->beginTransaction();
+        try {
+            $stmt = $this->pdo->prepare("
+                INSERT INTO appointments (patient_id, doctor_id, appointment_date, start_time, end_time, status, note)
+                VALUES (:patient_id, :doctor_id, :appointment_date, :start_time, :end_time, 'pending', :note)
+            ");
+            $stmt->execute([
+                ':patient_id' => $patientId,
+                ':doctor_id' => $doctorId,
+                ':appointment_date' => $date,
+                ':start_time' => $startTime,
+                ':end_time' => $endTime,
+                ':note' => $note ?: null,
+            ]);
+
+            $this->commit();
+            return (int)$this->pdo->lastInsertId();
+        } catch (Exception $e) {
+            $this->rollBack();
+            throw $e;
+        }
+    }
+
+    public function update(int $id, array $data): bool
+    {
+        $doctorId = (int)($data['doctor_id'] ?? 0);
+        $date = trim($data['appointment_date'] ?? '');
+        $startTime = trim($data['start_time'] ?? '');
+        $endTime = trim($data['end_time'] ?? '');
+        $note = trim($data['note'] ?? '');
+        $status = trim($data['status'] ?? 'pending');
+
+        if ($doctorId <= 0 || empty($date) || empty($startTime) || empty($endTime)) {
+            throw new InvalidArgumentException("กรุณากรอกข้อมูลการนัดหมายให้ครบถ้วน");
+        }
+
+        if (strlen($startTime) === 5) $startTime .= ':00';
+        if (strlen($endTime) === 5) $endTime .= ':00';
+
+        if ($startTime >= $endTime) {
+            throw new InvalidArgumentException("เวลาเริ่มต้นต้องน้อยกว่าเวลาสิ้นสุด");
+        }
+
+        $conflict = $this->checkConflict($doctorId, $date, $startTime, $endTime, $id);
+        if ($conflict) {
+            $conflictRange = substr($conflict['start_time'], 0, 5) . ' - ' . substr($conflict['end_time'], 0, 5);
+            throw new RuntimeException(
+                "แพทย์ท่านนี้มีนัดหมายแล้วในช่วงเวลา {$conflictRange} น. (คนไข้: {$conflict['patient_name']})"
+            );
+        }
+
+        $stmt = $this->pdo->prepare("
+            UPDATE appointments
+            SET doctor_id = :doctor_id, appointment_date = :appointment_date,
+                start_time = :start_time, end_time = :end_time, status = :status, note = :note
+            WHERE id = :id
+        ");
+        return $stmt->execute([
+            ':doctor_id' => $doctorId,
+            ':appointment_date' => $date,
+            ':start_time' => $startTime,
+            ':end_time' => $endTime,
+            ':status' => $status,
+            ':note' => $note ?: null,
+            ':id' => $id,
+        ]);
+    }
+
+    public function delete(int $id): bool
+    {
+        $stmt = $this->pdo->prepare("UPDATE appointments SET is_delete = 1 WHERE id = :id");
+        return $stmt->execute([':id' => $id]);
+    }
+
+    public function checkConflict(
+        int $doctorId,
+        string $date,
+        string $startTime,
+        string $endTime,
+        ?int $excludeId = null
+    ): ?array {
+        $sql = "
+            SELECT a.id, a.start_time, a.end_time, a.status,
+                   d.name AS doctor_name,
+                   p.full_name AS patient_name, p.hn AS patient_hn
+            FROM appointments a
+            JOIN doctors d ON a.doctor_id = d.id
+            JOIN patients p ON a.patient_id = p.id
+            WHERE a.doctor_id = :doctor_id
+              AND a.appointment_date = :appointment_date
+              AND a.status != 'cancelled'
+              AND a.start_time < :new_end_time
+              AND a.end_time > :new_start_time
+        ";
+
+        if ($excludeId !== null) {
+            $sql .= " AND a.id != :exclude_id";
+        }
+
+        $sql .= " LIMIT 1";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindValue(':doctor_id', $doctorId, PDO::PARAM_INT);
+        $stmt->bindValue(':appointment_date', $date, PDO::PARAM_STR);
+        $stmt->bindValue(':new_start_time', $startTime, PDO::PARAM_STR);
+        $stmt->bindValue(':new_end_time', $endTime, PDO::PARAM_STR);
+
+        if ($excludeId !== null) {
+            $stmt->bindValue(':exclude_id', $excludeId, PDO::PARAM_INT);
+        }
+
+        $stmt->execute();
+        $conflict = $stmt->fetch();
+
+        return $conflict ?: null;
     }
 }

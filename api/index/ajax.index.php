@@ -31,22 +31,41 @@ try {
             $pageIndex = max(1, (int)($input['pageIndex'] ?? 1));
             $pageSize = max(1, (int)($input['pageSize'] ?? 10));
             $result = $index->getOverview($filterPatientId, $filterDoctorId, $filterDate, $filterStatus, $pageIndex, $pageSize);
+            
             echo json_encode(array_merge(['success' => true], $result), JSON_UNESCAPED_UNICODE);
             break;
 
-        case 'update_appointment_status':
-            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                throw new InvalidArgumentException("Method Not Allowed: ต้องส่งแบบ POST");
+        case 'saveAppointment':
+            if (!empty($input['appointment_id']) || ($input['mode'] ?? '') === 'update') {
+                $id = (int)($input['appointment_id'] ?? $input['id'] ?? 0);
+                if ($id <= 0) {
+                    throw new InvalidArgumentException("ไม่พบรหัสนัดหมายที่ต้องการแก้ไข");
+                }
+                $index->update($id, $input);
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'แก้ไขข้อมูลการนัดหมายสำเร็จเรียบร้อยแล้ว!',
+                    'appointment_id' => $id
+                ], JSON_UNESCAPED_UNICODE);
+            } else {
+                $newId = $index->create($input);
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'สร้างนัดหมายสำเร็จเรียบร้อยแล้ว!',
+                    'appointment_id' => $newId
+                ], JSON_UNESCAPED_UNICODE);
             }
-            if (empty($input)) {
-                throw new InvalidArgumentException("ข้อมูลต้องส่งเป็น JSON เท่านั้น (ไม่รองรับ FormData)");
+            break;
+
+        case 'deleteAppointment':
+            $appointmentId = (int)($input['appointment_id'] ?? $input['id'] ?? 0);
+            if ($appointmentId <= 0) {
+                throw new InvalidArgumentException("ไม่พบรหัสนัดหมายที่ต้องการลบ");
             }
-            $appointmentId = (int)($input['appointment_id'] ?? 0);
-            $status = trim($input['status'] ?? '');
-            $index->updateStatus($appointmentId, $status);
+            $index->delete($appointmentId);
             echo json_encode([
                 'success' => true,
-                'message' => 'อัปเดตสถานะนัดหมายเรียบร้อยแล้ว'
+                'message' => 'ลบรายการนัดหมายเรียบร้อยแล้ว'
             ], JSON_UNESCAPED_UNICODE);
             break;
 
