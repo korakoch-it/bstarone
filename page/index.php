@@ -1,9 +1,4 @@
 <?php
-// =====================================================================
-// page/index.php - หน้ารายการนัดของวันนี้ + Modal สร้างนัดหมายแพทย์
-// Flat Design Corporativo | Bootstrap 5.3.3 | Powered by Vue 2 (CDN)
-// =====================================================================
-
 $pageTitle = 'การนัดหมาย';
 $activePage = 'today';
 require_once __DIR__ . '/header.php';
@@ -109,11 +104,11 @@ require_once __DIR__ . '/header.php';
                 <template v-if="a.status == 'pending'">
                   <span class="badge rounded-pill text-bg-warning">รอเข้ารับบริการ</span>
                 </template>
-                <template v-if="a.status == 'confirmed'">
-                  <span class="badge rounded-pill text-bg-primary">ยืนยันนัดหมาย</span>
+                <template v-else-if="a.status == 'confirmed'">
+                  <span class="badge rounded-pill text-bg-info">ยืนยันนัดหมาย</span>
                 </template>
                 <template v-else-if="a.status == 'arrived'">
-                  <span class="badge rounded-pill text-bg-success">มาแล้ว</span>
+                  <span class="badge rounded-pill text-bg-primary">มาแล้ว</span>
                 </template>
                 <template v-else-if="a.status == 'completed'">
                   <span class="badge rounded-pill text-bg-success">เสร็จสิ้น</span>

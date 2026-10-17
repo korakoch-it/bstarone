@@ -18,7 +18,7 @@ class ClassIndex extends Database
         $status = !empty($status) ? trim($status) : null;
 
         // 1. นับจำนวนทั้งหมด
-        $countSql = "SELECT COUNT(*) FROM appointments a JOIN patients p ON a.patient_id = p.id WHERE a.is_delete = 0 AND p.is_delete = 0";
+        $countSql = "SELECT COUNT(*) FROM appointments a JOIN patients p ON a.patient_id = p.id WHERE a.is_delete = 0";
         if ($targetDate !== null) {
             $countSql .= " AND a.appointment_date = :appointment_date";
         }
@@ -65,7 +65,7 @@ class ClassIndex extends Database
             FROM appointments a
             JOIN patients p ON a.patient_id = p.id
             JOIN doctors d ON a.doctor_id = d.id
-            WHERE a.is_delete = 0 AND p.is_delete = 0
+            WHERE a.is_delete = 0
         ";
         if ($targetDate !== null) {
             $sql .= " AND a.appointment_date = :appointment_date";
@@ -226,6 +226,7 @@ class ClassIndex extends Database
             WHERE a.doctor_id = :doctor_id
               AND a.appointment_date = :appointment_date
               AND a.status != 'cancelled'
+              AND a.is_delete = 0
               AND a.start_time < :new_end_time
               AND a.end_time > :new_start_time
         ";

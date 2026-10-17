@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS `appointments` (
     `status` ENUM('pending', 'confirmed', 'arrived', 'completed', 'cancelled') NOT NULL DEFAULT 'pending' COMMENT 'สถานะ: pending=รอเข้ารับบริการ  , confirmed=ยืนยันแล้ว, arrived=มาแล้ว, completed=เสร็จสิ้น, cancelled=ยกเลิก',
     `note` TEXT DEFAULT NULL COMMENT 'บันทึกอาการเบื้องต้น/หมายเหตุ',
     `is_active` TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'สถานะการนัดหมาย (1=Active, 0=Inactive)',
-    `is_delete` TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'สถานะการลบ (1=ลบข้อมูล)',
+    `is_delete` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'สถานะการลบ (0=ปกติ, 1=ลบข้อมูล)',
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 

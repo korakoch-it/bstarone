@@ -1,10 +1,4 @@
 <?php
-// =====================================================================
-// page/patients.php - จัดการข้อมูลผู้ป่วย (Flat Design Corporativo)
-// Bootstrap 5.3.3 | Powered by Vue 2 (CDN) | Modal Add/Edit
-// Endpoint: /api/patients/ajax.patient.php
-// =====================================================================
-
 $pageTitle = 'จัดการข้อมูลผู้ป่วย';
 $activePage = 'patients';
 require_once __DIR__ . '/header.php';
