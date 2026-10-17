@@ -27,9 +27,10 @@ class ClassMasterData extends Database
     public function getMasterAppointmentStatus()
     {
         return [
-            ['value'=> '', 'label'=> 'ทั้งหมด'],
-            ['value'=> 'pending', 'label'=> 'รอคิว'],
+            ['value'=> 'pending', 'label'=> 'รอเข้ารับบริการ'],
+            ['value'=> 'confirmed', 'label'=> 'ยืนยันนัดหมาย'],
             ['value'=> 'arrived', 'label'=> 'มาแล้ว'],
+            ['value'=> 'completed', 'label'=> 'เสร็จสิ้น'],
             ['value'=> 'cancelled', 'label'=> 'ยกเลิก']
         ];
     }

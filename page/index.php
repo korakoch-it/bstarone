@@ -55,6 +55,7 @@ require_once __DIR__ . '/header.php';
             <div class="col-md-4">
               <label for="filterStatus" class="form-label">สถานะ</label>
               <select id="filterStatus" v-model="filters.status" @change="getOverview(1)" class="form-select form-select-sm" >
+                <option value="">ทั้งหมด</option>
                 <option v-for="item in dropdownStatus" :key="item.value" :value="item.value">{{ item.label }}</option>
               </select>
             </div>
@@ -81,6 +82,7 @@ require_once __DIR__ . '/header.php';
               <th class="py-3">ผู้ป่วย</th>
               <th class="py-3">แพทย์</th>
               <th class="py-3">หมายเหตุ</th>
+              <th class="py-3" style="width: 130px;">สถานะ</th>
               <th class="pe-4 py-3 text-end" style="width: 100px;">จัดการ</th>
             </tr>
           </thead>
@@ -99,6 +101,23 @@ require_once __DIR__ . '/header.php';
               <td>{{ a.patient_name }}</td>
               <td>{{ a.doctor_name }}</td>
               <td class="text-muted small">{{ a.note || '-' }}</td>
+              <td>
+                <template v-if="a.status == 'pending'">
+                  <span class="badge rounded-pill text-bg-warning">รอเข้ารับบริการ</span>
+                </template>
+                <template v-if="a.status == 'confirmed'">
+                  <span class="badge rounded-pill text-bg-primary">ยืนยันนัดหมาย</span>
+                </template>
+                <template v-else-if="a.status == 'arrived'">
+                  <span class="badge rounded-pill text-bg-success">มาแล้ว</span>
+                </template>
+                <template v-else-if="a.status == 'completed'">
+                  <span class="badge rounded-pill text-bg-success">เสร็จสิ้น</span>
+                </template>
+                <template v-else-if="a.status == 'cancelled'">
+                  <span class="badge rounded-pill text-bg-danger">ยกเลิกนัด</span>
+                </template>
+              </td>
               <td class="pe-4 text-end">
                 <div class="d-inline-flex align-items-center gap-1.5">
                   <button 
@@ -112,7 +131,7 @@ require_once __DIR__ . '/header.php';
                   </button>
                   <button 
                     type="button" 
-                    class="btn btn-sm btn-outline-danger p-1.5 d-inline-flex align-items-center justify-content-center"
+                    class="btn btn-sm btn-outline-danger p-1.5 d-inline-flex align-items-center justify-content-center ms-1"
                     style="width: 30px; height: 30px;"
                     title="ลบการนัดหมาย"
                     @click="confirmDeleteAppointment(a)"
@@ -238,9 +257,9 @@ require_once __DIR__ . '/header.php';
             <div v-if="isEditMode">
               <label class="form-label small fw-semibold text-dark mb-1">สถานะ</label>
               <select v-model="bookingForm.status" class="form-select">
-                <option value="pending">รอรับบริการ</option>
-                <option value="arrived">มาถึงแล้ว</option>
-                <option value="cancelled">ยกเลิก</option>
+                <option v-for="(item, index) in dropdownStatus" :key="index" :value="item.value">
+                  {{ item.label }}
+                </option>
               </select>
             </div>
 

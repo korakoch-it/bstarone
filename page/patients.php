@@ -107,7 +107,7 @@ require_once __DIR__ . '/header.php';
                   </button>
                   <button 
                     type="button" 
-                    class="btn btn-sm btn-outline-danger p-1.5 d-inline-flex align-items-center justify-content-center"
+                    class="btn btn-sm btn-outline-danger p-1.5 d-inline-flex align-items-center justify-content-center ms-1"
                     style="width: 32px; height: 32px;"
                     title="ลบข้อมูลผู้ป่วย"
                     @click="confirmDeletePatient(p)"
