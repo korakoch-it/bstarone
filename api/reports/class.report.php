@@ -3,14 +3,13 @@
 // api/ReportApi.php - OOP Class สำหรับรายงานสรุปและสถิติ
 // ใช้งานในหน้า: reports.php
 // =====================================================================
+require_once __DIR__ . '/../config/database.php';
 
-class ReportApi
+class ClassReport extends Database
 {
-    private PDO $pdo;
-
-    public function __construct(PDO $pdo)
+    public function __construct()
     {
-        $this->pdo = $pdo;
+        parent::__construct();
     }
 
     /**

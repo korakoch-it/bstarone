@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS `patients` (
     `phone` VARCHAR(20) NOT NULL COMMENT 'เบอร์โทรศัพท์ที่ผ่านการ normalize แล้ว เช่น 0812345678',
     `birth_date` DATE NOT NULL COMMENT 'วันเกิด',
     `registration_date` DATE NOT NULL COMMENT 'วันที่ลงทะเบียนเข้าระบบ',
+    `is_active` TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'สถานะผู้ป่วย (1=Active, 0=Inactive)',
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
@@ -44,6 +45,7 @@ CREATE TABLE IF NOT EXISTS `patients` (
     UNIQUE KEY `uk_patients_hn` (`hn`),
 
     -- Indexes for fast search and report generation
+    INDEX `idx_patients_active` (`is_active`, `full_name`),
     INDEX `idx_patients_phone` (`phone`),
     INDEX `idx_patients_full_name` (`full_name`),
     INDEX `idx_patients_registration_date` (`registration_date`) COMMENT 'Index สำหรับรายงานสรุปจำนวนผู้ป่วยใหม่ตามช่วงวันที่'
@@ -80,3 +82,28 @@ CREATE TABLE IF NOT EXISTS `appointments` (
     -- 3. หน้ารายงานสรุป: WHERE appointment_date BETWEEN ? AND ? GROUP BY status
     INDEX `idx_appointments_report_date_status` (`appointment_date`, `status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -- ---------------------------------------------------------------------
+-- -- Table: time_slots (การตั้งค่าสล็อตเวลานัดหมายแพทย์ในระบบ)
+-- -- ---------------------------------------------------------------------
+-- CREATE TABLE IF NOT EXISTS `time_slots` (
+--     `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+--     `slot_time` TIME NOT NULL UNIQUE COMMENT 'เวลาสล็อต เช่น 09:00:00, 09:30:00',
+--     `is_active` TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'สถานะเปิดใช้งาน (1=Active, 0=Inactive)',
+--     `sort_order` INT NOT NULL DEFAULT 0 COMMENT 'ลำดับการแสดงผล',
+--     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+--     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+--     INDEX `idx_time_slots_active` (`is_active`, `sort_order`, `slot_time`)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -- ---------------------------------------------------------------------
+-- -- Table: clinic_settings (การตั้งค่าทั่วไปของคลินิก เช่น เวลาเปิดปิด, ความถี่ของสล็อต)
+-- -- ---------------------------------------------------------------------
+-- CREATE TABLE IF NOT EXISTS `clinic_settings` (
+--     `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+--     `setting_key` VARCHAR(50) NOT NULL UNIQUE COMMENT 'Key การตั้งค่า',
+--     `setting_value` VARCHAR(255) NOT NULL COMMENT 'Value ค่าการตั้งค่า',
+--     `description` VARCHAR(255) DEFAULT NULL COMMENT 'คำอธิบาย',
+--     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+

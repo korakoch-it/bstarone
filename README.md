@@ -1,6 +1,6 @@
 # Bestar-one Luxury Clinic - ระบบนัดหมายคลินิก
 
-ระบบนัดหมายคลินิกขนาดเล็ก (Clinic Appointment System) ที่ออกแบบและพัฒนาขึ้นตามโจทย์ทดสอบโปรแกรมเมอร์ของ **Bestar-one** โดยเน้นความถูกต้องของ Business Logic, สถาปัตยกรรมโค้ดที่สะอาด เป็นระเบียบ จัดกลุ่มฟังก์ชันตามหน้าการทำงานในรูปแบบ OOP ภายใต้โฟลเดอร์ `/api`, หน้าเว็บตกแต่งด้วย **Tailwind CSS v3 (Play CDN)**, การป้องกันการนัดหมายเวลาซ้อนกันอย่างแม่นยำ และการออกแบบฐานข้อมูลที่รองรับปริมาณข้อมูลขนาดใหญ่ระดับ 100,000+ แถวได้อย่างมีประสิทธิภาพ
+ระบบนัดหมายคลินิกขนาดเล็ก (Clinic Appointment System) ที่ออกแบบและพัฒนาขึ้นตามโจทย์ทดสอบโปรแกรมเมอร์ของ **Bestar-one** โดยเน้นความถูกต้องของ Business Logic, สถาปัตยกรรมโค้ดที่สะอาด เป็นระเบียบ จัดกลุ่มฟังก์ชันตามหน้าการทำงานในรูปแบบ OOP ภายใต้โฟลเดอร์ `/api`, หน้าเว็บตกแต่งด้วย **Bootstrap 5 (CDN)**, การป้องกันการนัดหมายเวลาซ้อนกันอย่างแม่นยำ และการออกแบบฐานข้อมูลที่รองรับปริมาณข้อมูลขนาดใหญ่ระดับ 100,000+ แถวได้อย่างมีประสิทธิภาพ
 
 ---
 
@@ -10,10 +10,9 @@
 3. [วิธีติดตั้งและรันทีละขั้นตอน (Step-by-step Setup)](#วิธีติดตั้งและรันทีละขั้นตอน)
 4. [การออกแบบฐานข้อมูลและการใส่ Index (Database & Indexing Rationale)](#การออกแบบฐานข้อมูลและการใส่-index)
 5. [การทำงานของระบบเช็คนัดชน (Overlap Prevention Engine)](#การทำงานของระบบเช็คนัดชน)
-6. [การทดสอบระบบอัตโนมัติ (Automated Tests)](#การทดสอบระบบอัตโนมัติ)
-7. [ข้อจำกัดที่รู้อยู่และส่วนที่สามารถพัฒนาต่อยอด (Known Limitations)](#ข้อจำกัดที่รู้อยู่และส่วนที่สามารถพัฒนาต่อยอด)
-8. [การเปิดเผยการใช้งาน AI (AI Disclosure)](#การเปิดเผยการใช้งาน-ai)
-9. [โครงร่างสคริปต์สำหรับบันทึกคลิปวิดีโอ 10–15 นาที](#โครงร่างสคริปต์สำหรับบันทึกคลิปวิดีโอ-1015-นาที)
+6. [ข้อจำกัดที่รู้อยู่และส่วนที่สามารถพัฒนาต่อยอด (Known Limitations)](#ข้อจำกัดที่รู้อยู่และส่วนที่สามารถพัฒนาต่อยอด)
+7. [การเปิดเผยการใช้งาน AI (AI Disclosure)](#การเปิดเผยการใช้งาน-ai)
+8. [โครงร่างสคริปต์สำหรับบันทึกคลิปวิดีโอ 10–15 นาที](#โครงร่างสคริปต์สำหรับบันทึกคลิปวิดีโอ-1015-นาที)
 
 ---
 
@@ -25,45 +24,53 @@
    - เพิ่ม แก้ไข และค้นหาผู้ป่วยตามชื่อ-นามสกุล, รหัส HN หรือเบอร์โทรศัพท์
    - ระบบออกรหัส HN อัตโนมัติในรูปแบบ `HN000001` โดยเรียงลำดับต่อเนื่อง ไม่ซ้ำซ้อน
    - **Phone Normalization Engine**: แปลงเบอร์โทรศัพท์ทุกรูปแบบ เช่น `081-234-5678`, `+66812345678`, `66 81 234 5678`, `+66 81-234-5678` ให้ถูกจัดเก็บเป็นมาตรฐาน `0812345678` เสมอ
+   - **Live AJAX Search & Pagination**: ค้นหาผู้ป่วยแบบ Real-time (Debounce) และสลับหน้าแบบแบ่งหน้าผ่าน AJAX โดยไม่ต้องรีเฟรชหน้าเว็บ
 
 2. **ระบบนัดหมายแพทย์ (Appointment Scheduling)**
    - นัดหมายโดยเลือกผู้ป่วย, แพทย์, วันที่, เวลาเริ่มต้น และเวลาสิ้นสุด
-   - มีรายชื่อแพทย์ตัวอย่างในฐานข้อมูลพร้อมสาขาความเชี่ยวชาญ
-   - **กลไกป้องกันนัดชน**: แพทย์คนเดียวกันไม่สามารถมีนัดเวลาซ้อนกันได้ ทั้งแบบซ้อนกันทั้งหมดหรือบางส่วน
-   - มีระบบแจ้งเตือนชัดเจนทันทีหากช่วงเวลาดังกล่าวมีนัดแล้ว
+   - **AJAX Patient Autocomplete**: ค้นหาผู้ป่วยเพื่อลงนัดหมายผ่าน AJAX ช่วยให้รองรับข้อมูลคนไข้ระดับ 100,000+ รายได้อย่างมีประสิทธิภาพ
+   - **Real-time AJAX Overlap Check**: ระบบตรวจสอบนัดชนทันทีที่เปลี่ยนแพทย์/วันที่/เวลาผ่าน AJAX แจ้งเตือนสถานะทันทีบนหน้าจอก่อนกดบันทึก
    - นัดที่ถูกยกเลิก (`status = 'cancelled'`) จะไม่ถูกนับว่าชน
 
 3. **หน้ารายการนัดของวันนี้ (Today's Schedule & Queue)**
-   - แสดงคิวนัดหมายของวันนี้เรียงลำดับตามเวลา (`start_time ASC`)
-   - กรองแสดงผลเฉพาะแพทย์แต่ละท่าน หรือดูแพทย์ทุกคนได้
-   - ปรับเปลี่ยนสถานะได้ทันที: **รอ** (pending) / **มาแล้ว** (arrived) / **ยกเลิก** (cancelled)
+   - แสดงคิวนัดหมายของวันนี้เรียงลำดับตามเวลา (`start_time ASC`) ดึงข้อมูลผ่าน AJAX
+   - กรองแสดงผลเฉพาะแพทย์แต่ละท่าน หรือเปลี่ยนวันที่ได้ทันทีโดยไม่ต้องโหลดหน้าใหม่
+   - ปรับเปลี่ยนสถานะได้ทันทีผ่าน AJAX: **รอ** (pending) / **มาแล้ว** (arrived) / **ยกเลิก** (cancelled)
 
 4. **รายงานสรุปและสถิติ (High-Volume Analytics Dashboard)**
-   - เลือกช่วงวันที่ได้อิสระ
-   - แสดงตัวเลขสรุป: จำนวนผู้ป่วยใหม่, จำนวนนัดหมายทั้งหมด, และจำนวนนัดแยกตามสถานะ
-   - แสดงตารางสถิติจำแนกรายแพทย์
+   - เลือกช่วงวันที่แล้วดึงรายงานสรุปและสถิติรายแพทย์ผ่าน AJAX
+   - แสดงตัวเลขสรุป 5 มิติ: จำนวนผู้ป่วยใหม่, จำนวนนัดหมายทั้งหมด, และจำนวนนัดแยกตามสถานะ
    - ออกแบบ Query และ B-Tree Index รองรับตารางที่มีข้อมูลมากกว่า 100,000 แถว
 
 ---
 
 ## สถาปัตยกรรมระบบและโครงสร้างไฟล์
 
-ระบบจัดกลุ่ม Business Logic เป็น **OOP Classes ภายใต้โฟลเดอร์ `/api`** โดยแยกตามฟังก์ชันของแต่ละหน้า และใช้ **Tailwind CSS v3 (Play CDN)** ในการตกแต่งหน้าตาให้สวยงาม Responsive ทันสมัย:
+ระบบจัดกลุ่ม Business Logic เป็น **OOP Classes ภายใต้โฟลเดอร์ `/api` โดยแยกโฟลเดอร์ตามหน้าจอ** แต่ละโฟลเดอร์มี Class ฟังก์ชัน และ `ajax.php` (AJAX Endpoint ตอบกลับ JSON) ของหน้านั้นเอง ให้ Frontend ที่ตกแต่งด้วย **Bootstrap 5 (CDN)** เรียกใช้:
 
 ```
 bstarone_test/
 ├── config/
 │   └── database.php            # การเชื่อมต่อฐานข้อมูล MySQL ด้วย PDO
-├── api/                        # รวม OOP Classes แยกตามฟังก์ชันของแต่ละ Page:
-│   ├── PatientApi.php          # OOP Class จัดการผู้ป่วย, สร้าง HN, normalize เบอร์โทร, searchPaginated
-│   ├── AppointmentApi.php      # OOP Class นัดหมายแพทย์, เช็คนัดชน, เปลี่ยนสถานะ, getTodayPaginated
-│   └── ReportApi.php           # OOP Class รายงานสรุปและสถิติ (รองรับข้อมูล 100,000+ แถว)
-├── page/                       # รวมไฟล์หน้าเว็บ Frontend (Tailwind CSS v3 Play CDN + Pagination):
-│   ├── index.php               # หน้ารายการนัดของวันนี้ (Tailwind UI + AppointmentApi + Pagination)
-│   ├── booking.php             # หน้านัดหมายแพทย์ (Tailwind UI + AppointmentApi, PatientApi)
-│   ├── patients.php            # หน้าจัดการข้อมูลผู้ป่วย (Tailwind UI + PatientApi + Pagination)
-│   ├── reports.php             # หน้ารายงานสรุปและสถิติ (Tailwind UI + ReportApi)
-│   ├── header.php              # ส่วนหัวเว็บ เมนูนำทาง และโหลด Tailwind CSS CDN
+├── api/                        # แยกโฟลเดอร์ตามหน้าจอ (Class + AJAX Endpoint):
+│   ├── index/                  # หน้ารายการนัดวันนี้
+│   │   ├── IndexApi.php        # getDoctors, getTodayPaginated, updateStatus
+│   │   └── ajax.php            # get_appointments, update_appointment_status
+│   ├── booking/                # หน้านัดหมายแพทย์
+│   │   ├── BookingApi.php      # getDoctors, checkConflict (เช็คนัดชน), create
+│   │   └── ajax.php            # search_patients, check_conflict, save_appointment
+│   ├── patients/               # หน้าจัดการผู้ป่วย
+│   │   ├── PatientApi.php      # สร้าง HN, normalize เบอร์โทร, search, create, update
+│   │   └── ajax.php            # get_patients, get_patient, save_patient
+│   └── reports/                # หน้ารายงานสรุป
+│       ├── ReportApi.php       # getSummary (รองรับข้อมูล 100,000+ แถว)
+│       └── ajax.php            # get_report
+├── page/                       # รวมไฟล์หน้าเว็บ Frontend (AJAX Fetch API + Bootstrap 5):
+│   ├── index.php               # หน้ารายการนัดของวันนี้ (ดึงข้อมูลคิวนัดหมาย & เปลี่ยนสถานะด้วย AJAX)
+│   ├── booking.php             # หน้านัดหมายแพทย์ (Live Patient Search & Real-time Overlap Check ด้วย AJAX)
+│   ├── patients.php            # หน้าจัดการข้อมูลผู้ป่วย (Live Search, Pagination & บันทึกคนไข้ด้วย AJAX)
+│   ├── reports.php             # หน้ารายงานสรุปและสถิติ (ดึงข้อมูล 5 Metrics & สถิติรายแพทย์ด้วย AJAX)
+│   ├── header.php              # ส่วนหัวเว็บ เมนูนำทาง และโหลด Bootstrap 5 CDN
 │   └── footer.php              # ส่วนท้ายเว็บ
 ├── database/
 │   ├── schema.sql              # DDL ตาราง patients, doctors, appointments พร้อม Indexes
@@ -72,8 +79,6 @@ bstarone_test/
 ├── nginx.conf                  # Nginx configuration
 ├── docker-compose.yml          # Container orchestration (Web:8080, App, DB:3306)
 ├── index.php                   # Entrypoint Redirect ไปยัง /page/index.php
-├── tests/
-│   └── run_tests.php           # Automated Test Suite ทดสอบ OOP API & Pagination (33/33 ผ่าน)
 ├── .env.example                # ตัวอย่างไฟล์ Environment Variables
 └── README.md
 ```
@@ -93,10 +98,6 @@ bstarone_test/
 3. เปิดเว็บเบราว์เซอร์แล้วเข้าใช้งานได้ทันทีที่:
    ```
    http://localhost:8080
-   ```
-4. หากต้องการสั่งรัน Automated Test ผ่าน Docker:
-   ```bash
-   docker compose exec app php tests/run_tests.php
    ```
 
 ---
@@ -187,18 +188,6 @@ $$\text{Existing.start\_time} < \text{New.end\_time} \quad \text{AND} \quad \tex
 
 ---
 
-## การทดสอบระบบอัตโนมัติ
-
-โปรเจกต์มีชุดทดสอบ Unit Tests อยู่ใน [`tests/run_tests.php`](tests/run_tests.php) ซึ่งครอบคลุมทุกเงื่อนไขตามโจทย์:
-
-```bash
-docker compose exec app php tests/run_tests.php
-```
-
-ผลการทดสอบ: 27 Passed, 0 Failed
-
----
-
 ## ข้อจำกัดที่รู้อยู่และส่วนที่สามารถพัฒนาต่อยอด
 
 1. **ระบบความปลอดภัยและการพิสูจน์ตัวตน (Authentication & Authorization)**:
@@ -217,14 +206,14 @@ docker compose exec app php tests/run_tests.php
 ตามข้อกำหนดของแบบทดสอบ ("การใช้ AI และเครื่องมือช่วย: ใช้ได้ แต่ต้องระบุใน README ว่าใช้กับส่วนไหน"):
 
 * **ส่วนที่ใช้ AI ช่วย**:
-  1. ช่วยเลือกชุดคลาส Tailwind CSS v3 และจัดวาง Layout ให้มีความสวยงาม ทันสมัย (Luxury Medical Aesthetic)
+  1. ช่วยเลือกชุดคลาส Bootstrap 5 และจัดวาง Layout ให้มีความสวยงาม ทันสมัย (Luxury Medical Aesthetic)
   2. ช่วยคิดชุดข้อมูลตัวอย่าง (Seed Data) และ Test Cases เพื่อให้ครอบคลุม Edge Cases ของเบอร์โทรศัพท์และช่วงเวลา
   3. ช่วยจัดรูปแบบเอกสาร README ให้มีความเป็นมืออาชีพ สวยงาม และอ่านง่าย
 * **ส่วนที่ทำและเข้าใจด้วยตนเอง**:
   - การออกแบบ Database Schema และ Relational Foreign Keys
   - การกำหนดสูตรคณิตศาสตร์และเงื่อนไข SQL สำหรับการตรวจสอบนัดชน (`start_time < new_end AND end_time > new_start`)
   - การเลือกตำแหน่ง B-Tree Composite Indexing เพื่อรองรับข้อมูลขนาด 100,000+ แถว
-  - โค้ด OOP Classes ในโฟลเดอร์ `/api` (`PatientApi`, `AppointmentApi`, `ReportApi`)
+  - โค้ด OOP Classes ในโฟลเดอร์ `/api` แยกตามหน้าจอ (`IndexApi`, `BookingApi`, `PatientApi`, `ReportApi`)
   - ผู้สมัครสามารถอธิบายที่มา ตรรกะ และการทำงานของโค้ดทุกส่วนได้อย่างละเอียดในคลิปวิดีโอ
 
 ---
@@ -254,7 +243,7 @@ docker compose exec app php tests/run_tests.php
    - ชี้ไปที่ `idx_appointments_report_date_status`: อธิบายว่าเป็น Covering Index สำหรับหน้ารายงาน
 
 ### ส่วนที่ 3: เปิดโค้ดส่วนเช็คนัดชนกันและอธิบายทีละส่วน (3 นาที)
-1. เปิดไฟล์ `api/AppointmentApi.php` ฟังก์ชัน `checkConflict`
+1. เปิดไฟล์ `api/booking/BookingApi.php` ฟังก์ชัน `checkConflict`
 2. อธิบายเงื่อนไข SQL:
    - `doctor_id = :doctor_id AND appointment_date = :date`
    - `status != 'cancelled'` (อธิบายว่าทำไมนัดที่ยกเลิกไม่นับว่าชน)

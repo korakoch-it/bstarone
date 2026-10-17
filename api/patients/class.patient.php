@@ -3,14 +3,13 @@
 // api/PatientApi.php - OOP Class สำหรับจัดการข้อมูลผู้ป่วย
 // ใช้งานในหน้า: patients.php, booking.php
 // =====================================================================
+require_once __DIR__ . '/../config/database.php';
 
-class PatientApi
+class ClassPatient extends Database
 {
-    private PDO $pdo;
-
-    public function __construct(PDO $pdo)
+    public function __construct()
     {
-        $this->pdo = $pdo;
+        parent::__construct();
     }
 
     /**
@@ -64,10 +63,11 @@ class PatientApi
 
         $phone = $this->normalizePhone($rawPhone);
         $hn = $this->generateHN();
+        $isActive = isset($data['is_active']) ? ((int)$data['is_active'] ? 1 : 0) : 1;
 
         $stmt = $this->pdo->prepare("
-            INSERT INTO patients (hn, full_name, phone, birth_date, registration_date)
-            VALUES (:hn, :full_name, :phone, :birth_date, :registration_date)
+            INSERT INTO patients (hn, full_name, phone, birth_date, registration_date, is_active)
+            VALUES (:hn, :full_name, :phone, :birth_date, :registration_date, :is_active)
         ");
         $stmt->execute([
             ':hn' => $hn,
@@ -75,6 +75,7 @@ class PatientApi
             ':phone' => $phone,
             ':birth_date' => $birthDate,
             ':registration_date' => $regDate,
+            ':is_active' => $isActive,
         ]);
 
         $newId = (int)$this->pdo->lastInsertId();
@@ -95,16 +96,18 @@ class PatientApi
         }
 
         $phone = $this->normalizePhone($rawPhone);
+        $isActive = isset($data['is_active']) ? ((int)$data['is_active'] ? 1 : 0) : 1;
 
         $stmt = $this->pdo->prepare("
             UPDATE patients
-            SET full_name = :full_name, phone = :phone, birth_date = :birth_date
+            SET full_name = :full_name, phone = :phone, birth_date = :birth_date, is_active = :is_active
             WHERE id = :id
         ");
         return $stmt->execute([
             ':full_name' => $fullName,
             ':phone' => $phone,
             ':birth_date' => $birthDate,
+            ':is_active' => $isActive,
             ':id' => $id,
         ]);
     }
