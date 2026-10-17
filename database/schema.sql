@@ -23,8 +23,7 @@ CREATE TABLE IF NOT EXISTS `doctors` (
     `phone` VARCHAR(20) DEFAULT NULL COMMENT 'เบอร์โทรติดต่อ',
     `is_active` TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'สถานะพร้อมตรวจ (1=Active, 0=Inactive)',
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX `idx_doctors_active` (`is_active`, `name`)
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
@@ -45,7 +44,7 @@ CREATE TABLE IF NOT EXISTS `patients` (
     UNIQUE KEY `uk_patients_hn` (`hn`),
 
     -- Indexes for fast search and report generation
-    INDEX `idx_patients_active` (`is_active`, `full_name`),
+    INDEX `idx_patients_hn` (`hn`),
     INDEX `idx_patients_phone` (`phone`),
     INDEX `idx_patients_full_name` (`full_name`),
     INDEX `idx_patients_registration_date` (`registration_date`) COMMENT 'Index สำหรับรายงานสรุปจำนวนผู้ป่วยใหม่ตามช่วงวันที่'
@@ -78,9 +77,6 @@ CREATE TABLE IF NOT EXISTS `appointments` (
     -- 1. ตรวจสอบนัดชน (Overlap Check): กรองแพทย์, วันที่, สถานะ และช่วงเวลา start_time, end_time
     INDEX `idx_appointments_overlap_check` (`doctor_id`, `appointment_date`, `status`, `start_time`, `end_time`),
 
-    -- 2. หน้ารายการนัดของวันนี้ & กรองตามแพทย์: WHERE appointment_date = CURDATE() ORDER BY start_time ASC
-    INDEX `idx_appointments_today_queue` (`appointment_date`, `doctor_id`, `start_time`),
-
-    -- 3. หน้ารายงานสรุป: WHERE appointment_date BETWEEN ? AND ? GROUP BY status
+    -- 2. หน้ารายงานสรุป: WHERE appointment_date BETWEEN ? AND ? GROUP BY status
     INDEX `idx_appointments_report_date_status` (`appointment_date`, `status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

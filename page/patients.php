@@ -168,14 +168,14 @@ require_once __DIR__ . '/header.php';
               <label class="form-label small fw-semibold text-dark mb-1">
                 ชื่อ-นามสกุล <span class="text-danger">*</span>
               </label>
-              <input type="text" v-model.trim="form.full_name" class="form-control" required placeholder="เช่น สมชาย ใจดี">
+              <input type="text" v-model.trim="form.full_name" class="form-control" required>
             </div>
 
             <div>
               <label class="form-label small fw-semibold text-dark mb-1">
                 เบอร์โทรศัพท์ <span class="text-danger">*</span>
               </label>
-              <input type="text" v-model.trim="form.phone" class="form-control" required placeholder="เช่น 081-234-5678">
+              <input type="text" v-model.trim="form.phone" class="form-control" required>
             </div>
 
             <div>

@@ -24,8 +24,8 @@ class ClassPatient extends Database
             $clean = '0' . substr($clean, 2);
         }
 
-        if (!preg_match('/^0\d{8,9}$/', $clean)) {
-            throw new InvalidArgumentException("หมายเลขโทรศัพท์ไม่ถูกต้อง (กรุณากรอกเช่น 081-234-5678 หรือ +66812345678)");
+        if (!preg_match('/^0\d{9}$/', $clean)) {
+            throw new InvalidArgumentException("หมายเลขโทรศัพท์ไม่ถูกต้อง");
         }
 
         return $clean;

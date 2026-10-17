@@ -44,18 +44,6 @@ try {
             }
             break;
 
-        case 'deletePatient':
-            $id = (int)($input['patient_id'] ?? $input['id'] ?? 0);
-            if ($id <= 0) {
-                throw new InvalidArgumentException("ไม่พบรหัสผู้ป่วยที่ต้องการลบ");
-            }
-            $patient->delete($id);
-            echo json_encode([
-                'success' => true,
-                'message' => 'ลบข้อมูลผู้ป่วยเรียบร้อยแล้ว'
-            ], JSON_UNESCAPED_UNICODE);
-            break;
-
         default:
             http_response_code(400);
             echo json_encode(['success' => false, 'error' => 'Unknown action: ' . $action], JSON_UNESCAPED_UNICODE);
