@@ -77,7 +77,8 @@ require_once __DIR__ . '/header.php';
         <table class="table table-hover align-middle mb-0">
           <thead>
             <tr>
-              <th class="ps-4 py-3" style="width: 170px;">ช่วงเวลานัด</th>
+              <th class="ps-4 py-3" style="width: 170px;">วันนัดหมาย</th>
+              <th class="ps-4 py-3" style="width: 170px;">เวลานัดหมาย</th>
               <th class="py-3" style="width: 120px;">HN</th>
               <th class="py-3">ผู้ป่วย</th>
               <th class="py-3">แพทย์</th>
@@ -94,6 +95,9 @@ require_once __DIR__ . '/header.php';
               </td>
             </tr>
             <tr v-for="a in results" :key="a.id">
+              <td class="ps-4 fw-semibold">
+                {{ a.appointment_date }}
+              </td>
               <td class="ps-4 fw-semibold">
                 {{ a.start_time.substring(0, 5) }} - {{ a.end_time.substring(0, 5) }}
               </td>

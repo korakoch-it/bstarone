@@ -1,9 +1,4 @@
 <?php
-// =====================================================================
-// api/index/ajax.index.php - AJAX Endpoint ของหน้า page/index.php
-// actions: get_appointments, update_appointment_status
-// =====================================================================
-
 header('Content-Type: application/json; charset=utf-8');
 
 require_once __DIR__ . '/class.index.php';

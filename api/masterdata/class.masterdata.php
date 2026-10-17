@@ -1,8 +1,4 @@
 <?php
-// =====================================================================
-// api/index/ClassIndex.php - ฟังก์ชันของหน้า "รายการนัดวันนี้" (page/index.php)
-// =====================================================================
-
 require_once __DIR__ . '/../config/database.php';
 
 class ClassMasterData extends Database

@@ -1,8 +1,4 @@
 <?php
-// =====================================================================
-// api/index/ClassIndex.php - ฟังก์ชันของหน้า "รายการนัดวันนี้" (page/index.php)
-// =====================================================================
-
 require_once __DIR__ . '/../config/database.php';
 
 class ClassIndex extends Database
@@ -134,9 +130,7 @@ class ClassIndex extends Database
         $conflict = $this->checkConflict($doctorId, $date, $startTime, $endTime);
         if ($conflict) {
             $conflictRange = substr($conflict['start_time'], 0, 5) . ' - ' . substr($conflict['end_time'], 0, 5);
-            throw new RuntimeException(
-                "แพทย์ท่านนี้มีนัดหมายแล้วในช่วงเวลา {$conflictRange} น. (คนไข้: {$conflict['patient_name']})"
-            );
+            throw new RuntimeException("แพทย์ท่านนี้มีนัดหมายแล้วในช่วงเวลา {$conflictRange} น.)");
         }
 
         $this->beginTransaction();
@@ -185,9 +179,7 @@ class ClassIndex extends Database
         $conflict = $this->checkConflict($doctorId, $date, $startTime, $endTime, $id);
         if ($conflict) {
             $conflictRange = substr($conflict['start_time'], 0, 5) . ' - ' . substr($conflict['end_time'], 0, 5);
-            throw new RuntimeException(
-                "แพทย์ท่านนี้มีนัดหมายแล้วในช่วงเวลา {$conflictRange} น. (คนไข้: {$conflict['patient_name']})"
-            );
+            throw new RuntimeException("แพทย์ท่านนี้มีนัดหมายแล้วในช่วงเวลา {$conflictRange} น.)");
         }
 
         $stmt = $this->pdo->prepare("
@@ -207,7 +199,7 @@ class ClassIndex extends Database
         ]);
     }
 
-    public function delete(int $id): bool
+    public function delete(int $id)
     {
         $stmt = $this->pdo->prepare("UPDATE appointments SET is_delete = 1 WHERE id = :id");
         return $stmt->execute([':id' => $id]);
@@ -221,9 +213,13 @@ class ClassIndex extends Database
         ?int $excludeId = null
     ): ?array {
         $sql = "
-            SELECT a.id, a.start_time, a.end_time, a.status,
-                   d.name AS doctor_name,
-                   p.full_name AS patient_name, p.hn AS patient_hn
+            SELECT a.id
+            , a.start_time
+            , a.end_time
+            , a.status
+            , d.name AS doctor_name
+            , p.full_name AS patient_name
+            , p.hn AS patient_hn
             FROM appointments a
             JOIN doctors d ON a.doctor_id = d.id
             JOIN patients p ON a.patient_id = p.id
@@ -246,6 +242,7 @@ class ClassIndex extends Database
         $stmt->bindValue(':new_start_time', $startTime, PDO::PARAM_STR);
         $stmt->bindValue(':new_end_time', $endTime, PDO::PARAM_STR);
 
+        // ไม่นับของผู้ป่วยที่ทำการแก้ไข
         if ($excludeId !== null) {
             $stmt->bindValue(':exclude_id', $excludeId, PDO::PARAM_INT);
         }

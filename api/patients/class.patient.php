@@ -12,7 +12,7 @@ class ClassPatient extends Database
      * แปลงเบอร์โทรศัพท์ให้อยู่ในรูปแบบมาตรฐาน 0812345678
      * รองรับ: 081-234-5678, +66812345678, 66 81 234 5678
      */
-    public function normalizePhone(string $rawPhone): string
+    public function normalizePhone(string $rawPhone)
     {
         $clean = preg_replace('/[^\d+]/', '', trim($rawPhone));
 
@@ -34,19 +34,19 @@ class ClassPatient extends Database
     /**
      * ออกรหัส HN อัตโนมัติในรูปแบบ HN000001
      */
-    public function generateHN(): string
+    public function generateHN()
     {
-        $stmt = $this->pdo->query("SELECT MAX(CAST(SUBSTRING(hn, 3) AS UNSIGNED)) AS max_seq FROM patients");
+        $stmt = $this->pdo->query("SELECT COUNT(id) AS running_no FROM patients");
         $row = $stmt->fetch();
-        $nextSeq = ($row && $row['max_seq'] !== null) ? ((int)$row['max_seq'] + 1) : 1;
+        $runningNo = ($row && $row['running_no'] !== null) ? ((int)$row['running_no'] + 1) : 1;
 
-        return 'HN' . str_pad((string)$nextSeq, 6, '0', STR_PAD_LEFT);
+        return 'HN' . str_pad((string)$runningNo, 6, '0', STR_PAD_LEFT);
     }
 
     /**
      * ลงทะเบียนผู้ป่วยใหม่
      */
-    public function create(array $data): array
+    public function create(array $data)
     {
         $fullName = trim($data['full_name'] ?? '');
         $rawPhone = trim($data['phone'] ?? '');
@@ -81,7 +81,7 @@ class ClassPatient extends Database
     /**
      * แก้ไขข้อมูลผู้ป่วย (HN ล็อกห้ามแก้ไข)
      */
-    public function update(int $id, array $data): bool
+    public function update(int $id, array $data)
     {
         $fullName = trim($data['full_name'] ?? '');
         $rawPhone = trim($data['phone'] ?? '');
@@ -108,46 +108,6 @@ class ClassPatient extends Database
         ]);
     }
 
-    /**
-     * ค้นหาผู้ป่วยตามชื่อ, HN หรือเบอร์โทรศัพท์
-     */
-    public function search(string $keyword = '', int $limit = 50): array
-    {
-        $trimmed = trim($keyword);
-        if (empty($trimmed)) {
-            $stmt = $this->pdo->prepare("SELECT * FROM patients WHERE is_delete = 0 ORDER BY id DESC LIMIT :limit");
-            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-            $stmt->execute();
-            return $stmt->fetchAll();
-        }
-
-        $digits = preg_replace('/\D/', '', $trimmed);
-        if (str_starts_with($digits, '66')) {
-            $digits = '0' . substr($digits, 2);
-        }
-
-        $sql = "
-            SELECT * FROM patients
-            WHERE is_delete = 0
-              AND (hn LIKE :hn_kw
-                   OR full_name LIKE :name_kw
-                   " . (!empty($digits) ? "OR phone LIKE :phone_kw" : "") . ")
-            ORDER BY id DESC
-            LIMIT :limit
-        ";
-
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->bindValue(':hn_kw', '%' . $trimmed . '%', PDO::PARAM_STR);
-        $stmt->bindValue(':name_kw', '%' . $trimmed . '%', PDO::PARAM_STR);
-        if (!empty($digits)) {
-            $stmt->bindValue(':phone_kw', '%' . $digits . '%', PDO::PARAM_STR);
-        }
-        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-        $stmt->execute();
-
-        return $stmt->fetchAll();
-    }
-
     public function getOverview(string $filterPatient = '', int $pageIndex = 1, int $pageSize = 10)
     {
         $pageIndex = max(1, $pageIndex);
@@ -156,28 +116,33 @@ class ClassPatient extends Database
 
         $filterPatient = !empty($filterPatient) ? trim($filterPatient) : '';
         if (empty($filterPatient)) {
-            $countStmt = $this->pdo->query("SELECT COUNT(*) FROM patients WHERE is_delete = 0");
+            $countStmt = $this->pdo->query("SELECT COUNT(*) FROM patients");
             $totalCount = (int)$countStmt->fetchColumn();
 
-            $stmt = $this->pdo->prepare("SELECT * FROM patients WHERE is_delete = 0 ORDER BY id DESC LIMIT :limit OFFSET :offset");
+            $stmt = $this->pdo->prepare("SELECT id
+                , hn
+                , full_name
+                , phone
+                , birth_date 
+                , registration_date 
+                , is_active
+                FROM patients ORDER BY id DESC LIMIT :limit OFFSET :offset");
             $stmt->bindValue(':limit', $pageSize, PDO::PARAM_INT);
             $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
             $stmt->execute();
             $data = $stmt->fetchAll();
         } else {
             $whereClause = "
-                WHERE is_delete = 0
+                WHERE 1=1
                   AND (hn LIKE :hn_kw
                        OR full_name LIKE :name_kw
-                       " . (!empty($digits) ? "OR phone LIKE :phone_kw" : "") . ")
+                       OR phone LIKE :phone_kw)
             ";
 
-            $countStmt = $this->pdo->prepare("SELECT COUNT(*) FROM patients {$whereClause}");
+            $countStmt = $this->pdo->prepare("SELECT COUNT(id) FROM patients {$whereClause}");
             $countStmt->bindValue(':hn_kw', '%' . $filterPatient . '%', PDO::PARAM_STR);
             $countStmt->bindValue(':name_kw', '%' . $filterPatient . '%', PDO::PARAM_STR);
-            if (!empty($digits)) {
-                $countStmt->bindValue(':phone_kw', '%' . $digits . '%', PDO::PARAM_STR);
-            }
+            $countStmt->bindValue(':phone_kw', '%' . $filterPatient . '%', PDO::PARAM_STR);
             $countStmt->execute();
             $totalCount = (int)$countStmt->fetchColumn();
 
@@ -188,6 +153,7 @@ class ClassPatient extends Database
                 , phone
                 , birth_date 
                 , registration_date 
+                , is_active
                 FROM patients
                 {$whereClause}
                 ORDER BY id DESC
@@ -196,9 +162,7 @@ class ClassPatient extends Database
             $stmt = $this->pdo->prepare($sql);
             $stmt->bindValue(':hn_kw', '%' . $filterPatient . '%', PDO::PARAM_STR);
             $stmt->bindValue(':name_kw', '%' . $filterPatient . '%', PDO::PARAM_STR);
-            if (!empty($digits)) {
-                $stmt->bindValue(':phone_kw', '%' . $digits . '%', PDO::PARAM_STR);
-            }
+            $stmt->bindValue(':phone_kw', '%' . $filterPatient . '%', PDO::PARAM_STR);
             $stmt->bindValue(':limit', $pageSize, PDO::PARAM_INT);
             $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
             $stmt->execute();
@@ -216,15 +180,16 @@ class ClassPatient extends Database
 
     public function getById(int $id): ?array
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM patients WHERE id = :id AND is_delete = 0");
+        $stmt = $this->pdo->prepare("SELECT id
+        , hn
+        , full_name
+        , phone
+        , birth_date 
+        , registration_date
+        , is_active
+        FROM patients WHERE id = :id");
         $stmt->execute([':id' => $id]);
         $row = $stmt->fetch();
         return $row ?: null;
-    }
-
-    public function delete(int $id): bool
-    {
-        $stmt = $this->pdo->prepare("UPDATE patients SET is_delete = 1 WHERE id = :id");
-        return $stmt->execute([':id' => $id]);
     }
 }

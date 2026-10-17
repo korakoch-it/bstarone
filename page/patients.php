@@ -68,7 +68,6 @@ require_once __DIR__ . '/header.php';
               <th class="py-3">ชื่อ-นามสกุล</th>
               <th class="py-3" style="width: 160px;">เบอร์โทรศัพท์</th>
               <th class="py-3" style="width: 100px;">อายุ</th>
-              <th class="py-3" style="width: 130px;">สถานะ</th>
               <th class="py-3" style="width: 160px;">วันที่ลงทะเบียน</th>
               <th class="pe-4 py-3 text-end" style="width: 100px;">จัดการ</th>
             </tr>
@@ -85,14 +84,6 @@ require_once __DIR__ . '/header.php';
               <td class="fw-semibold text-dark">{{ p.full_name }}</td>
               <td class="text-muted small font-monospace">{{ formatPhone(p.phone) }}</td>
               <td class="text-muted small">{{ calculateAge(p.birth_date) }}</td>
-              <td>
-                <template v-if="p.is_active == 1">
-                  <span class="badge rounded-pill text-bg-success">ใช้งาน</span>
-                </template>
-                <template v-else>
-                  <span class="badge rounded-pill text-bg-danger">ระงับ</span>
-                </template>
-              </td>
               <td class="text-muted small">{{ p.registration_date }}</td>
               <td class="pe-4 text-end">
                 <div class="d-inline-flex align-items-center gap-1.5">
@@ -104,15 +95,6 @@ require_once __DIR__ . '/header.php';
                     @click="editPatient(p)"
                   >
                     <i class="bi bi-pencil"></i>
-                  </button>
-                  <button 
-                    type="button" 
-                    class="btn btn-sm btn-outline-danger p-1.5 d-inline-flex align-items-center justify-content-center ms-1"
-                    style="width: 32px; height: 32px;"
-                    title="ลบข้อมูลผู้ป่วย"
-                    @click="confirmDeletePatient(p)"
-                  >
-                    <i class="bi bi-trash3"></i>
                   </button>
                 </div>
               </td>
@@ -210,14 +192,9 @@ require_once __DIR__ . '/header.php';
             </div>
 
             <div v-if="isEditMode" class="d-flex align-items-center justify-content-between">
-              <!-- <div> -->
-                <label class="form-label small fw-semibold text-dark mb-0 d-block" for="patientStatusSwitch">
-                  สถานะผู้ป่วย
-                </label>
-                <!-- <span class="text-muted" style="font-size: 0.8rem;">
-                  {{ form.is_active ? 'ใช้งานปกติ (Active)' : 'ระงับการใช้งาน (Inactive)' }}
-                </span> -->
-              <!-- </div> -->
+              <label class="form-label small fw-semibold text-dark mb-0 d-block" for="patientStatusSwitch">
+                สถานะผู้ป่วย
+              </label>
               <div class="form-check form-switch mb-0">
                 <input 
                   class="form-check-input" 
@@ -247,38 +224,6 @@ require_once __DIR__ . '/header.php';
             </button>
           </div>
         </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal ยืนยันการลบข้อมูลผู้ป่วย (Vue 2 + Bootstrap 5) -->
-  <div class="modal fade" id="deletePatientModal" ref="deletePatientModal" tabindex="-1" aria-labelledby="deletePatientModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
-      <div class="modal-content" style="border-radius: var(--radius-sm); border: 1px solid var(--corp-border);">
-        <div class="modal-body p-4 text-center">
-          <div class="d-inline-flex align-items-center justify-content-center rounded-circle text-danger bg-danger-subtle mb-3" style="width: 56px; height: 56px;">
-            <i class="bi bi-exclamation-triangle" style="font-size: 1.75rem;"></i>
-          </div>
-          <h5 class="fw-bold mb-2 text-dark" id="deletePatientModalLabel">ยืนยันการลบข้อมูล</h5>
-          <p class="text-muted small mb-4">
-            คุณต้องการลบข้อมูลใช่หรือไม่?
-          </p>
-          <div class="d-flex justify-content-center gap-2">
-            <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">
-              ยกเลิก
-            </button>
-            <button 
-              type="button" 
-              class="btn btn-sm btn-danger px-3 fw-semibold d-inline-flex align-items-center gap-1.5"
-              :disabled="isDeleting"
-              @click="deletePatient"
-            >
-              <span v-if="isDeleting" class="spinner-border spinner-border-sm" role="status"></span>
-              <i v-else class="bi bi-trash3"></i>
-              <span>{{ isDeleting ? 'กำลังลบ...' : 'ยืนยันการลบ' }}</span>
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -313,10 +258,7 @@ new Vue({
       phone: '',
       birth_date: '',
       is_active: 1
-    },
-    isDeleting: false,
-    modalInstanceDelete: null,
-    selectedPatientToDelete: null
+    }
   },
   computed: {
     isEditMode() {
@@ -473,55 +415,6 @@ new Vue({
         };
       } finally {
         this.isSubmitting = false;
-      }
-    },
-    confirmDeletePatient(p) {
-      this.selectedPatientToDelete = p;
-      if (!this.modalInstanceDelete && this.$refs.deletePatientModal) {
-        this.modalInstanceDelete = new bootstrap.Modal(this.$refs.deletePatientModal);
-      }
-      if (this.modalInstanceDelete) {
-        this.modalInstanceDelete.show();
-      }
-    },
-    async deletePatient() {
-      if (!this.selectedPatientToDelete) return;
-      this.isDeleting = true;
-      try {
-        const res = await fetch('/api/patients/ajax.patient.php', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            action: 'deletePatient',
-            patient_id: this.selectedPatientToDelete.id
-          })
-        });
-        const result = await res.json();
-        if (result.success) {
-          if (this.modalInstanceDelete) {
-            this.modalInstanceDelete.hide();
-          }
-          this.alert = {
-            type: 'success',
-            message: result.message || 'ลบข้อมูลผู้ป่วยเรียบร้อยแล้ว'
-          };
-          this.selectedPatientToDelete = null;
-          this.getOverview(this.pageIndex);
-        } else {
-          this.alert = {
-            type: 'danger',
-            message: result.error || 'เกิดข้อผิดพลาดในการลบข้อมูล'
-          };
-        }
-      } catch (e) {
-        this.alert = {
-          type: 'danger',
-          message: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์'
-        };
-      } finally {
-        this.isDeleting = false;
       }
     }
   }

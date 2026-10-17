@@ -38,7 +38,6 @@ CREATE TABLE IF NOT EXISTS `patients` (
     `birth_date` DATE NOT NULL COMMENT 'วันเกิด',
     `registration_date` DATE NOT NULL COMMENT 'วันที่ลงทะเบียนเข้าระบบ',
     `is_active` TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'สถานะผู้ป่วย (1=Active, 0=Inactive)',
-    `is_delete` TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'สถานะการลบ (1=ลบข้อมูล)',
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
@@ -62,7 +61,7 @@ CREATE TABLE IF NOT EXISTS `appointments` (
     `appointment_date` DATE NOT NULL COMMENT 'วันที่นัดหมาย',
     `start_time` TIME NOT NULL COMMENT 'เวลาเริ่มต้นนัด',
     `end_time` TIME NOT NULL COMMENT 'เวลาสิ้นสุดนัด',
-    `status` ENUM('pending', 'arrived', 'cancelled') NOT NULL DEFAULT 'pending' COMMENT 'สถานะ: pending=รอ, arrived=มาแล้ว, cancelled=ยกเลิก',
+    `status` ENUM('pending', 'confirmed', 'arrived', 'completed', 'cancelled') NOT NULL DEFAULT 'pending' COMMENT 'สถานะ: pending=รอเข้ารับบริการ  , confirmed=ยืนยันแล้ว, arrived=มาแล้ว, completed=เสร็จสิ้น, cancelled=ยกเลิก',
     `note` TEXT DEFAULT NULL COMMENT 'บันทึกอาการเบื้องต้น/หมายเหตุ',
     `is_active` TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'สถานะการนัดหมาย (1=Active, 0=Inactive)',
     `is_delete` TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'สถานะการลบ (1=ลบข้อมูล)',
